@@ -29,3 +29,17 @@ class TestCreateInstrumentSpecificRegex:
         correct_regex = "F:FBTP\\\\[A-Z][0-9][0-9]"
         assert generated_regexes == correct_regex
         # Cleanup - none
+
+
+class TestCreateListOfInstrumentRegexes:
+    def test_creation_of_list_of_instrument_regexes(self):
+        # Setup
+        instrument_names = ['F:FBTP', 'F:FDAX', 'F:FESX']
+        # Exercise
+        generated_instrument_regexes = wcg.create_list_of_instrument_regexes(instrument_names)
+        # Verify
+        expected_instrument_regexes = [
+            'F:FBTP\\\\[A-Z][0-9][0-9]', 'F:FDAX\\\\[A-Z][0-9][0-9]', 'F:FESX\\\\[A-Z][0-9][0-9]'
+        ]
+        assert generated_instrument_regexes == expected_instrument_regexes
+        # Cleanup - none
