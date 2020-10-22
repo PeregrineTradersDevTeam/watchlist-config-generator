@@ -1,0 +1,26 @@
+# see https://editorconfig.org/
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+charset = utf-8
+
+[*.py]
+max_line_length = 100
+
+[*.json]
+indent_size = 2
+insert_final_newline = ignore
+
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.toml]
+indent_size = 4
