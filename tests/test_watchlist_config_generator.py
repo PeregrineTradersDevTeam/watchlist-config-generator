@@ -17,3 +17,15 @@ class TestGetSourceFromFileName:
         # Verify
         assert retrieved_source_code == source
         # Cleanup - none
+
+
+class TestCreateInstrumentSpecificRegex:
+    def test_creation_of_instrument_specific_regex(self):
+        # Setup
+        instrument_name = "F:FBTP"
+        # Exercise
+        generated_regexes = wcg.create_instrument_specific_regex(instrument_name)
+        # Verify
+        correct_regex = "F:FBTP\\\\[A-Z][0-9][0-9]"
+        assert generated_regexes == correct_regex
+        # Cleanup - none
