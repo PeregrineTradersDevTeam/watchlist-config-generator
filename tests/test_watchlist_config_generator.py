@@ -166,6 +166,6 @@ class TestCombineMultipleRegexes:
         # Exercise
         generated_combination_of_regexes = wcg.combine_multiple_regexes(regexes)
         # Verify
-        expected_combination_of_regexes = r"F2:ES\\\\[A-Z][0-9][0-9]|F2:NQ\\\\[A-Z][0-9][0-9]"
-        assert generated_combination_of_regexes == expected_combination_of_regexes
+        expected_combination_of_regexes = "F2:ES\\\\[A-Z][0-9][0-9]|F2:NQ\\\\[A-Z][0-9][0-9]"
+        assert generated_combination_of_regexes.pattern == expected_combination_of_regexes
         # Cleanup - none
