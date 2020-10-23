@@ -104,12 +104,12 @@ class TestRetrieveInstruments:
 class TestCreateMessageLevelRegex:
     def test_creation_of_message_level_regexes(self, get_source_symbols_list):
         # Setup
-        source_instruments_view = get_source_symbols_list
+        instrument_symbols = ["F2:ES", "F2:NQ"]
         source_code = '684'
         # Exercise
         generated_message_level_regexes = wcg.create_message_level_regex(
             source_code,
-            source_instruments_view,
+            instrument_symbols,
         )
         # Verify
         expected_message_level_regexes = [
