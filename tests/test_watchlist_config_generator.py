@@ -5,7 +5,7 @@ from watchlist_config_generator import watchlist_config_generator as wcg
 
 
 class TestExtrapolateSourceInstrumentsView:
-    def test_extrapolation_of_source_instrument_view(self, get_source_symbols_list):
+    def test_extrapolation_of_source_instrument_view(self, get_source_symbols_dict):
         # Setup
         path_to_instruments_file = (
             pathlib.Path(__file__).resolve().parent / 'static_data' / 'instruments.json'
@@ -15,7 +15,7 @@ class TestExtrapolateSourceInstrumentsView:
             path_to_instruments_file
         )
         # Verify
-        expected_source_instrument_view = get_source_symbols_list
+        expected_source_instrument_view = get_source_symbols_dict
         assert extrapolated_source_instrument_view == expected_source_instrument_view
         # Cleanup - none
 
@@ -87,13 +87,13 @@ class TestRetrieveInstruments:
     )
     def test_retrieval_of_instruments_per_specific_source(
         self,
-        get_source_symbols_list,
+        get_source_symbols_dict,
         source,
         expected_list_of_instruments
 
     ):
         # Setup
-        source_instruments_view = get_source_symbols_list
+        source_instruments_view = get_source_symbols_dict
         # Exercise
         retrieved_instruments = wcg.retrieve_instruments(source_instruments_view, source)
         # Verify
@@ -101,13 +101,26 @@ class TestRetrieveInstruments:
         # Cleanup - none
 
 
-class TestCreateMessageLevelRegex:
-    def test_creation_of_message_level_regexes(self, get_source_symbols_list):
+class TestCreateMessageRegex:
+    def test_creation_of_message_regex(self):
+        # Setup
+        source_code = '207'
+        instrument_symbol = 'F:FESX'
+        # Exercise
+        generated_regex = wcg.create_message_regex(source_code, instrument_symbol)
+        # Verify
+        expected_regex = r"^DC\|207\|F:FESX\\\\[A-Z][0-9][0-9]"
+        assert generated_regex == expected_regex
+        # Cleanup - none
+
+
+class TestCreateMessageLevelRegexes:
+    def test_creation_of_message_level_regexes(self):
         # Setup
         instrument_symbols = ["F2:ES", "F2:NQ"]
         source_code = '684'
         # Exercise
-        generated_message_level_regexes = wcg.create_message_level_regex(
+        generated_message_level_regexes = wcg.create_message_level_regexes(
             source_code,
             instrument_symbols,
         )
@@ -132,12 +145,12 @@ class TestCreateInstrumentSpecificRegex:
         # Cleanup - none
 
 
-class TestCreateListOfInstrumentRegexes:
+class TestCreateInstrumentLevelRegexes:
     def test_creation_of_list_of_instrument_regexes(self):
         # Setup
         instrument_names = ['F:FBTP', 'F:FDAX', 'F:FESX']
         # Exercise
-        generated_instrument_regexes = wcg.create_list_of_instrument_regexes(instrument_names)
+        generated_instrument_regexes = wcg.create_instrument_level_regexes(instrument_names)
         # Verify
         expected_instrument_regexes = [
             'F:FBTP\\\\[A-Z][0-9][0-9]', 'F:FDAX\\\\[A-Z][0-9][0-9]', 'F:FESX\\\\[A-Z][0-9][0-9]'
