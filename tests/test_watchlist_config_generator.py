@@ -5,7 +5,7 @@ from watchlist_config_generator import watchlist_config_generator as wcg
 
 
 class TestExtrapolateSourceInstrumentsView:
-    def test_extrapolation_of_source_instrument_view(self):
+    def test_extrapolation_of_source_instrument_view(self, get_source_symbols_list):
         # Setup
         path_to_instruments_file = (
             pathlib.Path(__file__).resolve().parent / 'static_data' / 'instruments.json'
@@ -15,34 +15,7 @@ class TestExtrapolateSourceInstrumentsView:
             path_to_instruments_file
         )
         # Verify
-        expected_source_instrument_view = {
-            "207": [
-                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
-                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
-            ],
-            "367": [
-                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
-            ],
-            "611": ["F:FCE"],
-            "612": ["F:FCE"],
-            "652": ["F:FIB"],
-            "673": ["F2:ES", "F2:NQ"],
-            "676": ["F2:RTY", "F2:ED"],
-            "680": ["F2:RTY", "F2:ED"],
-            "684": ["F2:ES", "F2:NQ"],
-            "688": ["F2:YM"],
-            "693": [
-                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
-            ],
-            "748": [
-                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
-                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
-            ],
-            "890": ["F:Z"],
-            "903": ["F:FIB"],
-            "905": ["F:Z"],
-            "945": ["F2:YM"],
-        }
+        expected_source_instrument_view = get_source_symbols_list
         assert extrapolated_source_instrument_view == expected_source_instrument_view
         # Cleanup - none
 
@@ -114,24 +87,36 @@ class TestRetrieveInstruments:
     )
     def test_retrieval_of_instruments_per_specific_source(
         self,
+        get_source_symbols_list,
         source,
         expected_list_of_instruments
+
     ):
         # Setup
-        source_instruments_view = {
-            "207": [
-                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
-                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
-            ],
-            "367": [
-                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
-            ],
-            "611": ["F:FCE"],
-        }
+        source_instruments_view = get_source_symbols_list
         # Exercise
         retrieved_instruments = wcg.retrieve_instruments(source_instruments_view, source)
         # Verify
         assert retrieved_instruments == expected_list_of_instruments
+        # Cleanup - none
+
+
+class TestCreateMessageLevelRegex:
+    def test_creation_of_message_level_regexes(self, get_source_symbols_list):
+        # Setup
+        source_instruments_view = get_source_symbols_list
+        source_code = '684'
+        # Exercise
+        generated_message_level_regexes = wcg.create_message_level_regex(
+            source_code,
+            source_instruments_view,
+        )
+        # Verify
+        expected_message_level_regexes = [
+            r"^DC\|684\|F2:ES\\\\[A-Z][0-9][0-9]",
+            r"^DC\|684\|F2:NQ\\\\[A-Z][0-9][0-9]"
+        ]
+        assert generated_message_level_regexes == expected_message_level_regexes
         # Cleanup - none
 
 
