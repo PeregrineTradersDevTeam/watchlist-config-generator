@@ -1,6 +1,50 @@
+import pathlib
 import pytest
 
 from watchlist_config_generator import watchlist_config_generator as wcg
+
+
+class TestExtrapolateSourceInstrumentsView:
+    def test_extrapolation_of_source_instrument_view(self):
+        # Setup
+        path_to_instruments_file = (
+            pathlib.Path(__file__).resolve().parent / 'static_data' / 'instruments.json'
+        )
+        # Exercise
+        extrapolated_source_instrument_view = wcg.extrapolate_source_instruments_view(
+            path_to_instruments_file
+        )
+        # Verify
+        expected_source_instrument_view = {
+            "207": [
+                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
+                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
+            ],
+            "367": [
+                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
+            ],
+            "611": ["F:FCE"],
+            "612": ["F:FCE"],
+            "652": ["F:FIB"],
+            "673": ["F2:ES", "F2:NQ"],
+            "676": ["F2:RTY", "F2:ED"],
+            "680": ["F2:RTY", "F2:ED"],
+            "684": ["F2:ES", "F2:NQ"],
+            "688": ["F2:YM"],
+            "693": [
+                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
+            ],
+            "748": [
+                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
+                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
+            ],
+            "890": ["F:Z"],
+            "903": ["F:FIB"],
+            "905": ["F:Z"],
+            "945": ["F2:YM"],
+        }
+        assert extrapolated_source_instrument_view == expected_source_instrument_view
+        # Cleanup - none
 
 
 class TestGetSourceFromFileName:
