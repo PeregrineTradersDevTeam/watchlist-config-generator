@@ -91,8 +91,27 @@ def retrieve_instruments(
     return source_instruments_view.get(source_code)
 
 
-def create_instrument_specific_regex(instrument_name: str) -> str:
-    return rf"{instrument_name}\\[A-Z][0-9][0-9]"
+def create_instrument_specific_regex(instrument_symbol: str) -> str:
+    """Creates a regular expression specific to a futures instrument symbol.
+
+    The function uses the facts that futures contracts have a naming convention that
+    follows the structure "<instrument_symbol>\\\\<month_code><expiration_year>" (e.g. for
+    the EURO STOXX 50 future, with delivery March 2021, the contract name is F:FESX\\\\H21
+    ), to create symbol-specific regular expressions.
+
+    Parameters
+    ----------
+    instrument_symbol: str
+        The stable part of the instrument symbol as defined by ICE (e.g. F:FESX for the
+        EURO STOXX 50 Future, or F2:ES for the E-mini S&P 500 Index Futures).
+
+    Returns
+    -------
+    str
+        The regular expression with embedded the stable part of the instrument symbol.
+
+    """
+    return rf"{instrument_symbol}\\[A-Z][0-9][0-9]"
 
 
 def create_list_of_instrument_regexes(instrument_names: List[str]) -> List[str]:
