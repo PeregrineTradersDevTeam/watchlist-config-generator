@@ -96,6 +96,45 @@ class TestGetSourceFromFileName:
         # Cleanup - none
 
 
+class TestRetrieveInstruments:
+    @pytest.mark.parametrize(
+        'source, expected_list_of_instruments', [
+            (
+                "207",
+                ["F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM", "F:FGBL", "F:FGBX", "F:FBTS",
+                 "F:FBTP", "F:FOAT"]
+             ),
+            (
+                "367", ["F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"]
+            ),
+            (
+                "611", ["F:FCE"]
+            ),
+        ]
+    )
+    def test_retrieval_of_instruments_per_specific_source(
+        self,
+        source,
+        expected_list_of_instruments
+    ):
+        # Setup
+        source_instruments_view = {
+            "207": [
+                "F:FDAX", "F:FSMI", "F:FESX", "F:FGBS", "F:FGBM",
+                "F:FGBL", "F:FGBX", "F:FBTS", "F:FBTP", "F:FOAT"
+            ],
+            "367": [
+                "F2:ZF", "F2:ZN", "F2:ZT", "F2:UB", "F2:ZB", "F2:TN"
+            ],
+            "611": ["F:FCE"],
+        }
+        # Exercise
+        retrieved_instruments = wcg.retrieve_instruments(source_instruments_view, source)
+        # Verify
+        assert retrieved_instruments == expected_list_of_instruments
+        # Cleanup - none
+
+
 class TestCreateInstrumentSpecificRegex:
     def test_creation_of_instrument_specific_regex(self):
         # Setup
