@@ -46,8 +46,49 @@ def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path
 
 
 def get_source_from_file_name(file_name: str) -> str:
+    """Extrapolates the source code from the file name.
+
+    To retrieve the source code from the file name, the function uses the fact that the
+    ICE uses a consistent naming convention consisting of the file type accompanied by
+    the source code and the date the data in the file was generated.
+    (e.g. COREREF_207_20201023.txt.bz2).
+
+    Parameters
+    ----------
+    file_name: str
+        The name of a file following the ICE naming convention.
+
+    Returns
+    -------
+    str
+        The source-code.
+
+    """
     name_components = file_name.split('_')
     return name_components[1]
+
+
+def retrieve_instruments(
+    source_instruments_view: Dict[str, List[str]],
+    source_code: str
+) -> List[str]:
+    """Retrieves the list of instruments of interest for a specific source-code.
+
+    Parameters
+    ----------
+    source_instruments_view: Dict[str, List[str]]
+        A dictionary containing pairs of source-code and list of instruments of interest
+        for the specific source.
+    source_code: str
+        An ICE source-code corresponding to a specific market.
+
+    Returns
+    -------
+    List[str]
+        A list of instrument's symbols as strings.
+
+    """
+    return source_instruments_view.get(source_code)
 
 
 def create_instrument_specific_regex(instrument_name: str) -> str:
