@@ -1,7 +1,7 @@
 import json
 import pathlib
 import re
-from typing import List, Dict
+from typing import Dict, List, Pattern
 
 
 def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, List[str]]:
@@ -179,3 +179,20 @@ def create_instrument_level_regexes(instrument_symbols: List[str]) -> List[str]:
         A list of regular expressions.
     """
     return [create_instrument_specific_regex(name) for name in instrument_symbols]
+
+
+def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
+    """Combine multiple regular expressions in a single pattern.
+
+    Parameters
+    ----------
+    regexes: List[str]
+        A list of regular expressions.
+
+    Returns
+    -------
+    Pattern[str]
+        A Pattern object containing the pattern that combines all the passed regular
+        expressions.
+    """
+    return re.compile("|".join(regexes))
