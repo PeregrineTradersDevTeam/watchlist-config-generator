@@ -53,29 +53,17 @@ class TestDiscoverReferenceDataFiles:
         # Cleanup - none
 
 
-class TestGetFileNameFromPath:
-    def test_retrieval_of_file_name(self):
-        # Setup
-        path_to_file = pathlib.Path("C:/Users/SomeUser/Data/COREREF_612_20201023.txt.bz2")
-        # Exercise
-        retrieved_file_name = wcg.get_file_name_from_path(path_to_file)
-        # Verify
-        expected_file_name = "COREREF_612_20201023"
-        assert retrieved_file_name == expected_file_name
-        # Cleanup - none
-
-
-class TestGetSourceFromFileName:
+class TestGetSourceFromFilePath:
     @pytest.mark.parametrize(
-        'file_name, source', [
-            ('COREREF_207_20201016.txt.bz2', '207'),
-            ('COREREF_945_20200815.txt.bz2', '945')
+        'file_path, source', [
+            (pathlib.Path("C:/Users/SomeUser/Data/COREREF_612_20201023.txt.bz2"), '612'),
+            (pathlib.Path("C:/Users/SomeUser/Data/COREREF_945_20200815.txt.bz2"), '945'),
         ]
     )
-    def test_retrieval_of_source_code(self, file_name, source):
+    def test_retrieval_of_source_code(self, file_path, source):
         # Setup
         # Exercise
-        retrieved_source_code = wcg.get_source_from_file_name(file_name)
+        retrieved_source_code = wcg.get_source_from_file_path(file_path)
         # Verify
         assert retrieved_source_code == source
         # Cleanup - none
