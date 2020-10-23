@@ -47,6 +47,39 @@ class TestExtrapolateSourceInstrumentsView:
         # Cleanup - none
 
 
+class TestDiscoverReferenceDataFiles:
+    def test_discovery_of_reference_data_files(self, tmp_path):
+        # Setup
+        data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
+        # Exercise
+        discovered_reference_data_files = wcg.discover_reference_data_files(data_dir)
+        # Verify
+        expected_files = [
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '23',
+                '207',
+                'CORE',
+                'COREREF_207_20201023.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '23',
+                '367',
+                'CORE',
+                'COREREF_367_20201023.txt.bz2',
+            ),
+        ]
+        assert discovered_reference_data_files == expected_files
+        # Cleanup - none
+
+
 class TestGetSourceFromFileName:
     @pytest.mark.parametrize(
         'file_name, source', [
