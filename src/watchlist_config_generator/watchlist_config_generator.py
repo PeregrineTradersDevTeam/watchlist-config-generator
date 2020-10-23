@@ -62,7 +62,6 @@ def get_source_from_file_name(file_name: str) -> str:
     -------
     str
         The source-code.
-
     """
     name_components = file_name.split('_')
     return name_components[1]
@@ -86,9 +85,58 @@ def retrieve_instruments(
     -------
     List[str]
         A list of instrument's symbols as strings.
-
     """
     return source_instruments_view.get(source_code)
+
+
+def create_message_regex(source_code: str, instrument_symbol: str) -> str:
+    """Creates a regular expression specific to a source and futures instrument symbol combination.
+
+    The function creates a regular expression to targets the DC message in the COREREF
+    file specific to the source-code and the instrument symbol of choice. This is
+    possible since the DC message starts with DC|<source-code>|<instrument-symbol>.
+
+    Parameters
+    ----------
+    source_code: str
+        An ICE source-code.
+    instrument_symbol
+        The stable portion of a futures instrument symbol.
+
+    Returns
+    -------
+    str
+        A regular expression that incorporates in the DC|<source-code>|<instrument-symbol>
+        the desired source-code and instrument symbol.
+    """
+    return fr"^DC\|{source_code}\|{instrument_symbol}\\\\[A-Z][0-9][0-9]"
+
+
+def create_message_level_regexes(source_code: str, instrument_symbols: List[str]) -> List[str]:
+    """Creates a list of regular expressions.
+
+    The function creates a list of regular expressions that target the DC messages in a
+    COREREF reference file for a specific source code and instrument symbol combination.
+    In particular, the resulting list contains all the regular expressions that are
+    needed to target the DC messages containing the information of all the instruments of
+    interest for the specific source code.
+
+    Parameters
+    ----------
+    source_code: str
+        An ICE source-code
+    instrument_symbols: List[str]
+        A list of the stable portion of futures contracts symbols.
+
+    Returns
+    -------
+    List[str]
+        A list of regular expression.
+    """
+    return [
+        create_message_regex(source_code, symbol)
+        for symbol in instrument_symbols
+    ]
 
 
 def create_instrument_specific_regex(instrument_symbol: str) -> str:
@@ -109,10 +157,25 @@ def create_instrument_specific_regex(instrument_symbol: str) -> str:
     -------
     str
         The regular expression with embedded the stable part of the instrument symbol.
-
     """
     return rf"{instrument_symbol}\\[A-Z][0-9][0-9]"
 
 
-def create_list_of_instrument_regexes(instrument_names: List[str]) -> List[str]:
-    return [create_instrument_specific_regex(name) for name in instrument_names]
+def create_instrument_level_regexes(instrument_symbols: List[str]) -> List[str]:
+    """Creates a list of instrument-specific regular expressions.
+
+    The function creates a list of regular expressions to target, within a specific DC
+    message, the portion of the message containing the complete instrument symbol, for
+    each instrument symbol included in the list passed as an input of the function.
+
+    Parameters
+    ----------
+    instrument_symbols: List[str]
+        A list of the stable components of the futures instrument symbols.
+
+    Returns
+    -------
+    List[str]
+        A list of regular expressions.
+    """
+    return [create_instrument_specific_regex(name) for name in instrument_symbols]
