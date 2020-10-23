@@ -45,24 +45,8 @@ def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path
     return list(data_folder.glob("**/COREREF*.txt.bz2"))
 
 
-def get_file_name_from_path(path_to_file: pathlib.Path) -> str:
-    """Extrapolates the file name from a pathlib Path object.
-
-    Parameters
-    ----------
-    path_to_file: pathlib.Path
-        The path to the file for which the file has to be extrapolated.
-
-    Returns
-    -------
-    str
-        The file name.
-    """
-    return path_to_file.name.split(".")[0]
-
-
-def get_source_from_file_name(file_name: str) -> str:
-    """Extrapolates the source code from the file name.
+def get_source_from_file_path(file_path: pathlib.Path) -> str:
+    """Extrapolates the source code from the file path.
 
     To retrieve the source code from the file name, the function uses the fact that the
     ICE uses a consistent naming convention consisting of the file type accompanied by
@@ -71,14 +55,15 @@ def get_source_from_file_name(file_name: str) -> str:
 
     Parameters
     ----------
-    file_name: str
-        The name of a file following the ICE naming convention.
+    file_path: str
+        The path to the file for which the source=code has to be extrapolated.
 
     Returns
     -------
     str
         The source-code.
     """
+    file_name = file_path.name.split(".")[0]
     name_components = file_name.split('_')
     return name_components[1]
 
