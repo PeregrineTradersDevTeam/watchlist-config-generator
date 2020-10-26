@@ -187,6 +187,12 @@ def retrieve_source_name_pairs(
             if re.search(message_level_pattern, line.decode("utf8")):
                 source_name_pairs.append(
                     f"{get_source_from_file_path(path_to_reference_data_file)},"
-                    f"{re.search(instrument_level_pattern, line.decode('utf8'))[0]}\n"
+                    f"{re.search(instrument_level_pattern, line.decode('utf8'))[0]}"
                 )
     return source_name_pairs
+
+
+def prepare_config_file_body(source_name_pairs: List[str]) -> str:
+    header = "sourceId, RTSsymbol\n"
+    body = "\n".join(source_name_pairs)
+    return f"{header}{body}"
