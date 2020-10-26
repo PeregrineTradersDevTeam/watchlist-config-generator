@@ -48,20 +48,20 @@ def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, Lis
 def get_source_from_file_path(file_path: pathlib.Path) -> str:
     """Extrapolates the source code from the file path.
 
-    To retrieve the source code from the file name, the function uses the fact that the
+    To retrieve the source id from the file name, the function uses the fact that the
     ICE uses a consistent naming convention consisting of the file type accompanied by
-    the source code and the date the data in the file was generated.
+    the source id and the date the data in the file was generated.
     (e.g. COREREF_207_20201023.txt.bz2).
 
     Parameters
     ----------
     file_path: str
-        The path to the file for which the source=code has to be extrapolated.
+        The path to the file for which the source id has to be extrapolated.
 
     Returns
     -------
     str
-        The source-code.
+        The source id.
     """
     file_name = file_path.name.split(".")[0]
     name_components = file_name.split('_')
@@ -70,77 +70,27 @@ def get_source_from_file_path(file_path: pathlib.Path) -> str:
 
 def retrieve_instruments(
     source_instruments_view: Dict[str, List[str]],
-    source_code: str
+    source_id: str
 ) -> List[str]:
-    """Retrieves the list of instruments of interest for a specific source-code.
+    """Retrieves the list of instruments of interest for a specific source id.
 
     Parameters
     ----------
     source_instruments_view: Dict[str, List[str]]
         A dictionary containing pairs of source-code and list of instruments of interest
         for the specific source.
-    source_code: str
-        An ICE source-code corresponding to a specific market.
+    source_id: str
+        An ICE source id corresponding to a specific market.
 
     Returns
     -------
     List[str]
         A list of instrument's symbols as strings.
     """
-    return source_instruments_view.get(source_code)
+    return source_instruments_view.get(source_id)
 
 
-def create_message_regex(source_code: str, instrument_symbol: str) -> str:
-    """Creates a regular expression specific to a source and futures instrument symbol combination.
-
-    The function creates a regular expression to targets the DC message in the COREREF
-    file specific to the source-code and the instrument symbol of choice. This is
-    possible since the DC message starts with DC|<source-code>|<instrument-symbol>.
-
-    Parameters
-    ----------
-    source_code: str
-        An ICE source-code.
-    instrument_symbol
-        The stable portion of a futures instrument symbol.
-
-    Returns
-    -------
-    str
-        A regular expression that incorporates in the DC|<source-code>|<instrument-symbol>
-        the desired source-code and instrument symbol.
-    """
-    return fr"^DC\|{source_code}\|{instrument_symbol}\\[A-Z][0-9]{2}"
-
-
-def create_message_level_regexes(source_code: str, instrument_symbols: List[str]) -> List[str]:
-    """Creates a list of regular expressions.
-
-    The function creates a list of regular expressions that target the DC messages in a
-    COREREF reference file for a specific source code and instrument symbol combination.
-    In particular, the resulting list contains all the regular expressions that are
-    needed to target the DC messages containing the information of all the instruments of
-    interest for the specific source code.
-
-    Parameters
-    ----------
-    source_code: str
-        An ICE source-code
-    instrument_symbols: List[str]
-        A list of the stable portion of futures contracts symbols.
-
-    Returns
-    -------
-    List[str]
-        A list of regular expression.
-    """
-    return [
-        create_message_regex(source_code, symbol)
-        for symbol in instrument_symbols
-    ]
-
-
-def create_instrument_specific_regex(instrument_symbol: str) -> str:
+def create_specific_instrument_regex(instrument_symbol: str) -> str:
     """Creates a regular expression specific to a futures instrument symbol.
 
     The function uses the facts that futures contracts have a naming convention that
@@ -159,13 +109,13 @@ def create_instrument_specific_regex(instrument_symbol: str) -> str:
     str
         The regular expression with embedded the stable part of the instrument symbol.
     """
-    return rf"{instrument_symbol}\\[A-Z][0-9]{2}"
+    return rf"{instrument_symbol}\\[A-Z][0-9]{{2}}"
 
 
-def create_instrument_level_regexes(instrument_symbols: List[str]) -> List[str]:
-    """Creates a list of instrument-specific regular expressions.
+def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
+    """Creates a regular expression pattern to target all the instrument names relevant to a source.
 
-    The function creates a list of regular expressions to target, within a specific DC
+    The function creates a regular expression pattern to target, within a specific DC
     message, the portion of the message containing the complete instrument symbol, for
     each instrument symbol included in the list passed as an input of the function.
 
@@ -176,10 +126,36 @@ def create_instrument_level_regexes(instrument_symbols: List[str]) -> List[str]:
 
     Returns
     -------
-    List[str]
-        A list of regular expressions.
+    Str
+        A regular expression pattern.
     """
-    return [create_instrument_specific_regex(name) for name in instrument_symbols]
+    specific_instrument_regexes = [
+        create_specific_instrument_regex(name)
+        for name in instrument_symbols
+    ]
+    return rf"({'|'.join(specific_instrument_regexes)})"
+
+
+def create_message_level_pattern(source_id: str, instrument_symbols: List[str]) -> str:
+    """Creates a regular expression pattern to target DC message types.
+
+    The function creates a list of regular expressions to target the DC messages
+    containing the information of all the instruments of interest for the specific
+    source id.
+
+    Parameters
+    ----------
+    source_id: str
+        An ICE source id.
+    instrument_symbols: List[str]
+        A list of the stable portion of futures contracts symbols.
+
+    Returns
+    -------
+    List[str]
+        A list of regular expression.
+    """
+    return rf"^DC\|{source_id}\|{create_instrument_level_pattern(instrument_symbols)}"
 
 
 def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
@@ -197,3 +173,5 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
         expressions.
     """
     return re.compile("|".join(regexes))
+
+
