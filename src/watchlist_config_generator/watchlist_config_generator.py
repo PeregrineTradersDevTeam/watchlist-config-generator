@@ -1,3 +1,4 @@
+import bz2
 import json
 import pathlib
 import re
@@ -69,18 +70,18 @@ def get_source_from_file_path(file_path: pathlib.Path) -> str:
 
 
 def retrieve_instruments(
+    source_id: str,
     source_instruments_view: Dict[str, List[str]],
-    source_id: str
 ) -> List[str]:
     """Retrieves the list of instruments of interest for a specific source id.
 
     Parameters
     ----------
+    source_id: str
+        An ICE source id corresponding to a specific market.
     source_instruments_view: Dict[str, List[str]]
         A dictionary containing pairs of source-code and list of instruments of interest
         for the specific source.
-    source_id: str
-        An ICE source id corresponding to a specific market.
 
     Returns
     -------
@@ -126,7 +127,7 @@ def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
 
     Returns
     -------
-    Str
+    str
         A regular expression pattern.
     """
     specific_instrument_regexes = [
@@ -152,8 +153,8 @@ def create_message_level_pattern(source_id: str, instrument_symbols: List[str]) 
 
     Returns
     -------
-    List[str]
-        A list of regular expression.
+    str
+        A regular expression pattern.
     """
     return rf"^DC\|{source_id}\|{create_instrument_level_pattern(instrument_symbols)}"
 
@@ -175,3 +176,17 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
     return re.compile("|".join(regexes))
 
 
+def retrieve_source_name_pairs(
+    path_to_reference_data_file: pathlib.Path,
+    message_level_pattern: str,
+    instrument_level_pattern: str
+) -> List[str]:
+    source_name_pairs = []
+    with bz2.open(path_to_reference_data_file, 'rb') as infile:
+        for line in infile:
+            if re.search(message_level_pattern, line.decode("utf8")):
+                source_name_pairs.append(
+                    f"{get_source_from_file_path(path_to_reference_data_file)},"
+                    f"{re.search(instrument_level_pattern, line.decode('utf8'))[0]}\n"
+                )
+    return source_name_pairs
