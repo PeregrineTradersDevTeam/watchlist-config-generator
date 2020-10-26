@@ -110,7 +110,7 @@ def create_message_regex(source_code: str, instrument_symbol: str) -> str:
         A regular expression that incorporates in the DC|<source-code>|<instrument-symbol>
         the desired source-code and instrument symbol.
     """
-    return fr"^DC\|{source_code}\|{instrument_symbol}\\\\[A-Z][0-9][0-9]"
+    return fr"^DC\|{source_code}\|{instrument_symbol}\\[A-Z][0-9]{2}"
 
 
 def create_message_level_regexes(source_code: str, instrument_symbols: List[str]) -> List[str]:
@@ -159,7 +159,7 @@ def create_instrument_specific_regex(instrument_symbol: str) -> str:
     str
         The regular expression with embedded the stable part of the instrument symbol.
     """
-    return rf"{instrument_symbol}\\[A-Z][0-9][0-9]"
+    return rf"{instrument_symbol}\\[A-Z][0-9]{2}"
 
 
 def create_instrument_level_regexes(instrument_symbols: List[str]) -> List[str]:
