@@ -4,6 +4,26 @@ import re
 from typing import Dict, List, Pattern
 
 
+def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path]:
+    """Returns a list containing the paths to the reference data files.
+
+    The function searches COREREF files in the directory tree underlying the root of the
+    data folder and collects the paths of the discovered files in a list.
+
+    Parameters
+    ----------
+    path_to_data_folder: str
+        The path to the root of the data folder.
+
+    Returns
+    -------
+    List[pathlib.Path]
+        A list of pathlib.Path objects, pointing to the location of the COREREF files.
+    """
+    data_folder = pathlib.Path(path_to_data_folder)
+    return list(data_folder.glob("**/COREREF*.txt.bz2"))
+
+
 def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, List[str]]:
     """Reads a JSON file and converts its content in a dictionary.
 
@@ -23,26 +43,6 @@ def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, Lis
     """
     with pathlib.Path(path_to_json_file).open('r') as infile:
         return json.loads(infile.read())
-
-
-def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path]:
-    """Returns a list containing the paths to the reference data files.
-
-    The function searches COREREF files in the directory tree underlying the root of the
-    data folder and collects the paths of the discovered files in a list.
-
-    Parameters
-    ----------
-    path_to_data_folder: str
-        The path to the root of the data folder.
-
-    Returns
-    -------
-    List[pathlib.Path]
-        A list of pathlib.Path objects, pointing to the location of the COREREF files.
-    """
-    data_folder = pathlib.Path(path_to_data_folder)
-    return list(data_folder.glob("**/COREREF*.txt.bz2"))
 
 
 def get_source_from_file_path(file_path: pathlib.Path) -> str:
