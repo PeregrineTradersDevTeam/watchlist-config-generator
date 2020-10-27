@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 import pytest
 
@@ -187,3 +188,17 @@ class TestRetrieveSourceNamePairs:
         ]
         assert retrieved_source_name_pairs == expected_source_name_pairs
         # Cleanup - none
+
+
+class TestGenerateConfigFilePath:
+    def test_generation_of_file_path(self):
+        # Setup
+        target_directory = "C:/Users/some_user/config_files"
+        # Exercise
+        generated_file_path = wcg.generate_config_file_path(target_directory)
+        # Verify
+        expected_file_path = pathlib.Path(target_directory).joinpath(
+            f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv")
+        assert generated_file_path.as_posix() == expected_file_path.as_posix()
+        # Cleanup - none
+
