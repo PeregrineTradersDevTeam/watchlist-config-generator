@@ -187,25 +187,3 @@ class TestRetrieveSourceNamePairs:
         ]
         assert retrieved_source_name_pairs == expected_source_name_pairs
         # Cleanup - none
-
-
-class TestPrepareConfigFileBody:
-    def test_preparation_of_config_file_body(self):
-        # Setup
-        source_name_pairs = [
-            '207,F:FBTP\\H21', '207,F:FBTP\\M21', '207,F:FBTP\\Z20',
-            '207,F:FBTS\\H21', '207,F:FBTS\\M21', '207,F:FBTS\\Z20'
-        ]
-        # Exercise
-        generated_config_file_body = wcg.prepare_config_file_body(source_name_pairs)
-        # Verify
-        expected_config_file_body = (
-            "sourceId, RTSsymbol\n"
-            "207,F:FBTP\\H21\n"        "207,F:FBTP\\M21\n"
-            "207,F:FBTP\\Z20\n"
-            "207,F:FBTS\\H21\n"
-            "207,F:FBTS\\M21\n"
-            "207,F:FBTS\\Z20"
-        )
-        assert generated_config_file_body == expected_config_file_body
-        # Cleanup - none
