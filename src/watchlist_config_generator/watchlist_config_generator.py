@@ -7,10 +7,7 @@ import re
 from typing import Dict, List, Optional, Pattern, Tuple
 
 
-def search_files(
-    path_to_folder: str,
-    search_pattern: str
-) -> List[pathlib.Path]:
+def search_files(path_to_folder: str, search_pattern: str) -> List[pathlib.Path]:
     """Returns a list containing the paths of all the files matching the search pattern.
 
     The function searches for all the files that match the search pattern. For some
@@ -47,6 +44,24 @@ def search_files(
     """
     data_folder = pathlib.Path(path_to_folder)
     return list(data_folder.glob(search_pattern))
+
+
+def find_all_coreref_files(directory: str) -> List[pathlib.Path]:
+    """Searches for all the COREREF files in a directory and all its subdirectories.
+
+    Parameters
+    ----------
+    directory: str
+        A string containing the path to directory where we want to search the COREREF
+        files.
+
+    Returns
+    -------
+    List[pathlib.Path]
+        A list of pathlib.Path objects, pointing to the location of all the discovered
+        COREREF files.
+    """
+    return list(pathlib.Path(directory).glob("**/COREREF*.txt.bz2"))
 
 
 def json_loader(path_to_json_file: str) -> Dict[str, List[str]]:
@@ -202,6 +217,18 @@ def retrieve_source_symbol_pairs(
     message_level_pattern: str,
     instrument_level_pattern: str
 ) -> List[Tuple[str, str]]:
+    """
+
+    Parameters
+    ----------
+    path_to_reference_data_file
+    message_level_pattern
+    instrument_level_pattern
+
+    Returns
+    -------
+
+    """
     source_name_pairs = []
     with bz2.open(path_to_reference_data_file, 'rb') as infile:
         for line in infile:
@@ -213,6 +240,37 @@ def retrieve_source_symbol_pairs(
                      ),
                 )
     return source_name_pairs
+
+
+def process_all_reference_files(
+    reference_data_files_paths: List[pathlib.Path],
+    source_symbols_dictionary: Dict[str, List[str]],
+) -> List:
+    """
+
+    Parameters
+    ----------
+    reference_data_files_paths
+    source_symbols_dictionary
+
+    Returns
+    -------
+
+    """
+    discovered_symbols = []
+    for file_path in reference_data_files_paths:
+        top_level_regex = create_message_level_pattern(
+            get_source_id_from_file_path(file_path),
+            retrieve_instruments(get_source_id_from_file_path(file_path), source_symbols_dictionary)
+        )
+        symbol_level_regex = create_instrument_level_pattern(
+            retrieve_instruments(get_source_id_from_file_path(file_path), source_symbols_dictionary)
+        )
+        source_specific_symbols = retrieve_source_symbol_pairs(
+            file_path, top_level_regex, symbol_level_regex
+        )
+        discovered_symbols.extend(source_specific_symbols)
+    return discovered_symbols
 
 
 def generate_config_file_path(directory_path: str) -> pathlib.Path:
