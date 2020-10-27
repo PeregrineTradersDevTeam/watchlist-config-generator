@@ -195,8 +195,3 @@ def retrieve_source_name_pairs(
                 )
     return source_name_pairs
 
-
-def prepare_config_file_body(source_name_pairs: List[str]) -> str:
-    header = "sourceId, RTSsymbol\n"
-    body = "\n".join(source_name_pairs)
-    return f"{header}{body}"
