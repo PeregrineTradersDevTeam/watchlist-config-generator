@@ -178,11 +178,12 @@ class TestRetrieveSourceNamePairs:
         )
         # Verify
         expected_source_name_pairs = [
-            '207,F:FBTP\\H21', '207,F:FBTP\\M21', '207,F:FBTP\\Z20', '207,F:FBTS\\H21',
-            '207,F:FBTS\\M21', '207,F:FBTS\\Z20', '207,F:FDAX\\H21', '207,F:FDAX\\M21',
-            '207,F:FDAX\\Z20', '207,F:FESX\\H21', '207,F:FESX\\H22', '207,F:FESX\\M21',
-            '207,F:FESX\\M22', '207,F:FESX\\U21', '207,F:FESX\\U22', '207,F:FESX\\Z20',
-            '207,F:FESX\\Z21'
+            ('207', 'F:FBTP\\H21'), ('207', 'F:FBTP\\M21'), ('207', 'F:FBTP\\Z20'),
+            ('207', 'F:FBTS\\H21'), ('207', 'F:FBTS\\M21'), ('207', 'F:FBTS\\Z20'),
+            ('207', 'F:FDAX\\H21'), ('207', 'F:FDAX\\M21'), ('207', 'F:FDAX\\Z20'),
+            ('207', 'F:FESX\\H21'), ('207', 'F:FESX\\H22'), ('207', 'F:FESX\\M21'),
+            ('207', 'F:FESX\\M22'), ('207', 'F:FESX\\U21'), ('207', 'F:FESX\\U22'),
+            ('207', 'F:FESX\\Z20'), ('207', 'F:FESX\\Z21')
         ]
         assert retrieved_source_name_pairs == expected_source_name_pairs
         # Cleanup - none
@@ -200,8 +201,7 @@ class TestPrepareConfigFileBody:
         # Verify
         expected_config_file_body = (
             "sourceId, RTSsymbol\n"
-            "207,F:FBTP\\H21\n"
-            "207,F:FBTP\\M21\n"
+            "207,F:FBTP\\H21\n"        "207,F:FBTP\\M21\n"
             "207,F:FBTP\\Z20\n"
             "207,F:FBTS\\H21\n"
             "207,F:FBTS\\M21\n"
