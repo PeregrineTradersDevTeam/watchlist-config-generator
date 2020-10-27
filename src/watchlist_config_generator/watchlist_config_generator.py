@@ -173,7 +173,7 @@ def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
     return rf"({'|'.join(specific_instrument_regexes)})"
 
 
-def create_message_level_pattern(source_id: str, instrument_symbols: List[str]) -> str:
+def create_dc_message_level_pattern(source_id: str, instrument_symbols: List[str]) -> str:
     """Creates a regular expression pattern to target DC message types.
 
     The function creates a list of regular expressions to target the DC messages
@@ -213,7 +213,7 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
 
 
 def retrieve_source_symbol_pairs(
-    path_to_reference_data_file: pathlib.Path,
+    path_to_coreref_file: pathlib.Path,
     message_level_pattern: str,
     instrument_level_pattern: str
 ) -> List[Tuple[str, str]]:
@@ -221,21 +221,29 @@ def retrieve_source_symbol_pairs(
 
     Parameters
     ----------
-    path_to_reference_data_file
-    message_level_pattern
-    instrument_level_pattern
+    path_to_coreref_file: pathlib.Path
+        A pathlib.Path object pointing to a COREREF file containing the reference data to
+        search.
+    message_level_pattern: str
+        A string containing the regex pattern used to filter only a specific type of
+        reference data message.
+    instrument_level_pattern: str
+        A string containing the regex patter used to filter a specific subset of
+        instrument's  symbols
 
     Returns
     -------
+    List[Tuple[str, str]]
+        A list of tuples each containing the source_id and the instrument's symbol.
 
     """
     source_name_pairs = []
-    with bz2.open(path_to_reference_data_file, 'rb') as infile:
+    with bz2.open(path_to_coreref_file, 'rb') as infile:
         for line in infile:
             if re.search(message_level_pattern, line.decode("utf8")):
                 source_name_pairs.append(
                     (
-                     get_source_id_from_file_path(path_to_reference_data_file),
+                     get_source_id_from_file_path(path_to_coreref_file),
                      re.search(instrument_level_pattern, line.decode('utf8'))[0]
                      ),
                 )
