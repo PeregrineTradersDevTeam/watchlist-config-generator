@@ -240,13 +240,13 @@ class TestRetrieveInstruments:
         # Cleanup - none
 
 
-class TestCreateMessageLevelPattern:
+class TestCreateDcMessageLevelPattern:
     def test_creation_of_message_level_pattern(self):
         # Setup
         instrument_symbols = ["F2:ES", "F2:NQ"]
         source_code = '684'
         # Exercise
-        generated_message_level_regexes = wcg.create_message_level_pattern(
+        generated_message_level_regexes = wcg.create_dc_message_level_pattern(
             source_code,
             instrument_symbols,
         )
@@ -296,7 +296,7 @@ class TestCombineMultipleRegexes:
         # Cleanup - none
 
 
-class TestRetrieveSourceNamePairs:
+class TestRetrieveSourceSymbolPairs:
     def test_retrieval_of_source_name_pairs(self):
         # Setup
         path_to_reference_data_file = (
@@ -325,6 +325,41 @@ class TestRetrieveSourceNamePairs:
             ('207', 'F:FESX\\Z20'), ('207', 'F:FESX\\Z21')
         ]
         assert retrieved_source_name_pairs == expected_source_name_pairs
+        # Cleanup - none
+
+
+class TestProcessAllCorerefFiles:
+    def test_discovery_of_all_symbols(self, get_source_symbols_dict):
+        # Setup
+        files_to_process = [
+            pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S367', 'CORE',
+                'COREREF_367_20201016.txt.bz2'
+            ),
+            pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
+                'COREREF_673_20201016.txt.bz2'
+                ),
+        ]
+        dictionary_of_symbols = get_source_symbols_dict
+        # Exercise
+        discovered_symbols = wcg.process_all_coreref_files(
+            files_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+            ('367', 'F2:TN\\H21'), ('367', 'F2:TN\\M21'), ('367', 'F2:TN\\Z20'),
+            ('367', 'F2:UB\\H21'), ('367', 'F2:UB\\M21'), ('367', 'F2:UB\\Z20'),
+            ('367', 'F2:ZB\\H21'), ('367', 'F2:ZB\\M21'), ('367', 'F2:ZB\\Z20'),
+            ('367', 'F2:ZF\\H21'), ('367', 'F2:ZF\\M21'), ('367', 'F2:ZF\\U20'),
+            ('367', 'F2:ZF\\Z20'), ('367', 'F2:ZN\\H21'), ('367', 'F2:ZN\\M21'),
+            ('367', 'F2:ZN\\Z20'), ('367', 'F2:ZT\\H21'), ('367', 'F2:ZT\\M21'),
+            ('367', 'F2:ZT\\U20'), ('367', 'F2:ZT\\Z20'), ('673', 'F2:ES\\H21'),
+            ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'), ('673', 'F2:ES\\Z20'),
+            ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'), ('673', 'F2:NQ\\M21'),
+            ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'), ('673', 'F2:NQ\\Z21')
+        ]
+        assert discovered_symbols == expected_symbols
         # Cleanup - none
 
 
