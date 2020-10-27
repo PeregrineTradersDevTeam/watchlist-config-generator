@@ -1,3 +1,4 @@
+import csv
 import datetime
 import pathlib
 import pytest
@@ -375,3 +376,100 @@ class TestGenerateConfigFilePath:
         assert generated_file_path.as_posix() == expected_file_path.as_posix()
         # Cleanup - none
 
+
+class TestConfigFileWriter:
+    def test_csv_file_is_created(self):
+        # Setup
+        target_directory = pathlib.Path(__file__).resolve().parent / "static_data"
+        source_symbol_pairs = [
+            ('367', 'F2:TN\\H21')
+        ]
+        # Exercise
+        wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
+        # Verify
+        expected_file_path = (
+            pathlib.Path(__file__).resolve().parent / "static_data" /
+            f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        )
+        assert expected_file_path.is_file() is True
+        # Cleanup - none
+        target_directory.joinpath(expected_file_path).unlink(missing_ok=True)
+
+    def test_written_file_has_proper_name(self):
+        # Setup
+        target_directory = pathlib.Path(__file__).resolve().parent / "static_data"
+        source_symbol_pairs = [
+            ('367', 'F2:TN\\H21'), ('367', 'F2:TN\\M21'), ('367', 'F2:TN\\Z20'),
+            ('367', 'F2:UB\\H21'), ('367', 'F2:UB\\M21'), ('367', 'F2:UB\\Z20'),
+            ('367', 'F2:ZB\\H21'), ('367', 'F2:ZB\\M21'), ('367', 'F2:ZB\\Z20'),
+            ('367', 'F2:ZF\\H21'), ('367', 'F2:ZF\\M21'), ('367', 'F2:ZF\\U20'),
+            ('367', 'F2:ZF\\Z20'), ('367', 'F2:ZN\\H21'), ('367', 'F2:ZN\\M21'),
+            ('367', 'F2:ZN\\Z20'), ('367', 'F2:ZT\\H21'), ('367', 'F2:ZT\\M21'),
+            ('367', 'F2:ZT\\U20'), ('367', 'F2:ZT\\Z20')
+        ]
+        # Exercise
+        wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
+        file_name = list(target_directory.glob("watchlist_config*.csv"))[0].name
+        # Verify
+        expected_file_name = f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        assert file_name == expected_file_name
+        # Cleanup - none
+        target_directory.joinpath(expected_file_name).unlink(missing_ok=True)
+
+    def test_file_has_proper_header(self):
+        # Setup
+        target_directory = pathlib.Path(__file__).resolve().parent / "static_data"
+        source_symbol_pairs = []
+        # Exercise
+        wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
+        # Verify
+        expected_header = "sourceId,RTSsymbol"
+        path_to_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" /
+            f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        )
+        with path_to_file.open('r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            for index, row in enumerate(csv_reader):
+                if index == 0:
+                    file_header =  ','.join(row)
+        assert file_header == expected_header
+        # Cleanup - none
+        path_to_file.unlink(missing_ok=True)
+
+    def test_file_has_expected_content(self):
+        # Setup
+        target_directory = pathlib.Path(__file__).resolve().parent / "static_data"
+        source_symbol_pairs = [
+            ('207', 'F:FBTP\\H21'), ('207', 'F:FBTP\\M21'), ('207', 'F:FBTP\\Z20'),
+            ('207', 'F:FBTS\\H21'), ('207', 'F:FBTS\\M21'), ('207', 'F:FBTS\\Z20')
+        ]
+        # Exercise
+        wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
+        # Verify
+        path_to_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" /
+            f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        )
+        expected_file_content = (
+            "sourceId,RTSsymbol\n"
+            "207,F:FBTP\\H21\n"
+            "207,F:FBTP\\M21\n"
+            "207,F:FBTP\\Z20\n"
+            "207,F:FBTS\\H21\n"
+            "207,F:FBTS\\M21\n"
+            "207,F:FBTS\\Z20"
+        )
+        with path_to_file.open('r') as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            # file_content = ''
+            # for index, row in enumerate(csv_reader):
+            #     if index == 0:
+            #         file_content + ','.join(row)
+            #     else:
+            #         file_content + '\n' + ','.join(row)
+            rows = [','.join(row) for row in csv_reader]
+            file_content = '\n'.join(rows)
+        assert file_content == expected_file_content
+        # Cleanup - none
+        path_to_file.unlink(missing_ok=True)
