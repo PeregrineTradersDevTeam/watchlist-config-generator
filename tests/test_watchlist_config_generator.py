@@ -31,10 +31,10 @@ class TestSearchFiles:
         assert discovered_reference_data_files == expected_files
         # Cleanup - none
 
-    def test_search_of_coreref_files_in_all_subdirectories(self):
+    def test_search_of_txt_bz2_files_in_all_subdirectories(self):
         # Setup
         data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
-        pattern = "**/COREREF*.txt.bz2"
+        pattern = "**/*.txt.bz2"
         # Exercise
         discovered_reference_data_files = wcg.search_files(data_dir, pattern)
         # Verify
@@ -55,6 +55,26 @@ class TestSearchFiles:
                 '2020',
                 '10',
                 '16',
+                'S207',
+                'CROSS',
+                'CROSSREF_207_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S207',
+                'WATCHLIST',
+                'WATCHLIST_207_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
                 'S367',
                 'CORE',
                 'COREREF_367_20201016.txt.bz2',
@@ -65,9 +85,49 @@ class TestSearchFiles:
                 '2020',
                 '10',
                 '16',
+                'S367',
+                'CROSS',
+                'CROSSREF_367_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S367',
+                'WATCHLIST',
+                'WATCHLIST_367_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
                 'S673',
                 'CORE',
                 'COREREF_673_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S673',
+                'CROSS',
+                'CROSSREF_673_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S673',
+                'WATCHLIST',
+                'WATCHLIST_673_20201016.txt.bz2',
             ),
         ]
         assert discovered_reference_data_files == expected_files
