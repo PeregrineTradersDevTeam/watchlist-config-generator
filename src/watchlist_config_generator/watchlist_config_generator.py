@@ -195,3 +195,20 @@ def retrieve_source_name_pairs(
                 )
     return source_name_pairs
 
+
+def generate_config_file_path(directory: str) -> pathlib.Path:
+    """Generates the file path of the configuration file in a given directory.
+
+    Parameters
+    ----------
+    directory: str
+        The path to the directory where the configuration file is to be placed.
+
+    Returns
+    -------
+    pathlib.Path
+        A Path object providing the full path to the configuration file.
+    """
+    return pathlib.Path(directory).joinpath(
+        f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+    )
