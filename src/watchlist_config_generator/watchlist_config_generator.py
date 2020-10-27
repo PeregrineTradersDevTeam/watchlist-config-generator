@@ -217,7 +217,14 @@ def retrieve_source_symbol_pairs(
     message_level_pattern: str,
     instrument_level_pattern: str
 ) -> List[Tuple[str, str]]:
-    """
+    """Searches for specific instrument symbols in a COREREF reference data file.
+
+    The function uses regular expressions to first isolate only those reference data
+    messages that belong to a specific message type (DC) and refer to a specific subset of
+    instrument symbols, and then to extract from the message only the contracts
+    corresponding to the subset of source-specific instrument's symbols.
+    Each contract discovered is included to a list together with the corresponding
+    source_id.
 
     Parameters
     ----------
@@ -229,7 +236,7 @@ def retrieve_source_symbol_pairs(
         reference data message.
     instrument_level_pattern: str
         A string containing the regex patter used to filter a specific subset of
-        instrument's  symbols
+        instrument's symbols
 
     Returns
     -------
@@ -250,24 +257,35 @@ def retrieve_source_symbol_pairs(
     return source_name_pairs
 
 
-def process_all_reference_files(
-    reference_data_files_paths: List[pathlib.Path],
+def process_all_coreref_files(
+    coreref_file_paths: List[pathlib.Path],
     source_symbols_dictionary: Dict[str, List[str]],
-) -> List:
-    """
+) -> List[Tuple[str, str]]:
+    """Searches for source-specific instrument symbols in each COREREF file in the list.
+
+    The function iterates over the list of COREREF files, detects the source id specific
+    to each file, retrieves from the source_symbols_dictionary the list of instrument's
+    symbols relevant for that source_id, and proceeds with searching for all the contracts
+    corresponding to the source-specific subset of symbols.
 
     Parameters
     ----------
-    reference_data_files_paths
-    source_symbols_dictionary
+    coreref_file_paths: List[pathlib.Path]
+        A list of pathlib.Path objects, each pointing to a different COREREF file.
+    source_symbols_dictionary: Dict[str, List[str]]
+        A dictionary containing "source_id":["instrument_symbol"] key-value pairs,
+        containing, for each source_id, the list of symbols of interest for that specific
+        source.
 
     Returns
     -------
+    List[Tuple[str, str]]
+        A list of tuples, each containing the source_id, and a contract's symbol.
 
     """
     discovered_symbols = []
-    for file_path in reference_data_files_paths:
-        top_level_regex = create_message_level_pattern(
+    for file_path in coreref_file_paths:
+        top_level_regex = create_dc_message_level_pattern(
             get_source_id_from_file_path(file_path),
             retrieve_instruments(get_source_id_from_file_path(file_path), source_symbols_dictionary)
         )
