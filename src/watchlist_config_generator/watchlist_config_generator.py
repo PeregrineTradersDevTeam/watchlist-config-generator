@@ -7,31 +7,50 @@ import re
 from typing import Dict, List, Optional, Pattern, Tuple
 
 
-def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path]:
-    """Returns a list containing the paths to the reference data files.
+def search_files(
+    path_to_folder: str,
+    search_pattern: str
+) -> List[pathlib.Path]:
+    """Returns a list containing the paths of all the files matching the search pattern.
 
-    The function searches COREREF files in the directory tree underlying the root of the
-    data folder and collects the paths of the discovered files in a list.
+    The function searches for all the files that match the search pattern. For some
+    examples on how to use the search_pattern functionality, see the Examples section
+    below.
 
     Parameters
     ----------
-    path_to_data_folder: str
-        The path to the root of the data folder.
+    path_to_folder: str
+        The path to the directory where we want to search the files.
+    search_pattern: str
+        A string containing the pattern that the function has to use to search for the
+        files.
 
     Returns
     -------
     List[pathlib.Path]
-        A list of pathlib.Path objects, pointing to the location of the COREREF files.
+        A list of pathlib.Path objects, pointing to the location of the discovered files.
+
+    Examples
+    --------
+    Search for all the .py files in the current directory:
+    >>> python_files = search_files('.', '*.py')
+
+    Search for all the .py files in the direct sub-directory of the current one:
+    >>> python_files = search_files('.', '*/*.py')
+
+    Search for all the .py files in all the directories and subdirectories rescursively:
+    >>> python_files = search_files('.', '**/*.py')
+
+    Search for all the files that have a name starting with COREREF and a txt.bz2
+    extension in all the subdirectories recursively:
+    >>>coreref_files = search_files('.', '**/COREREF*.txt.bz2')
     """
-    data_folder = pathlib.Path(path_to_data_folder)
-    return list(data_folder.glob("**/COREREF*.txt.bz2"))
+    data_folder = pathlib.Path(path_to_folder)
+    return list(data_folder.glob(search_pattern))
 
 
-def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, List[str]]:
+def json_loader(path_to_json_file: str) -> Dict[str, List[str]]:
     """Reads a JSON file and converts its content in a dictionary.
-
-    The function opens the JSON file containing the <source>: [<instruments] pairs and
-    converts the file content in a python dictionary.
 
     Parameters
     ----------
@@ -41,15 +60,15 @@ def extrapolate_source_instruments_view(path_to_json_file: str) -> Dict[str, Lis
     Returns
     -------
     Dict[str, List[str]]
-        A dictionary of source codes with the corresponding lists of instruments of
+        A dictionary of source codes with the corresponding lists of instrument symbols of
         interest for each source.
     """
     with pathlib.Path(path_to_json_file).open('r') as infile:
         return json.loads(infile.read())
 
 
-def get_source_from_file_path(file_path: pathlib.Path) -> str:
-    """Extrapolates the source code from the file path.
+def get_source_id_from_file_path(file_path: pathlib.Path) -> str:
+    """Extrapolates the source id from the file path.
 
     To retrieve the source id from the file name, the function uses the fact that the
     ICE uses a consistent naming convention consisting of the file type accompanied by
@@ -73,15 +92,15 @@ def get_source_from_file_path(file_path: pathlib.Path) -> str:
 
 def retrieve_instruments(
     source_id: str,
-    source_instruments_view: Dict[str, List[str]],
+    source_symbols_dictionary: Dict[str, List[str]],
 ) -> List[str]:
     """Retrieves the list of instruments of interest for a specific source id.
 
     Parameters
     ----------
     source_id: str
-        An ICE source id corresponding to a specific market.
-    source_instruments_view: Dict[str, List[str]]
+        An ICE source id.
+    source_symbols_dictionary: Dict[str, List[str]]
         A dictionary containing pairs of source-code and list of instruments of interest
         for the specific source.
 
@@ -90,7 +109,7 @@ def retrieve_instruments(
     List[str]
         A list of instrument's symbols as strings.
     """
-    return source_instruments_view.get(source_id)
+    return source_symbols_dictionary.get(source_id)
 
 
 def create_specific_instrument_regex(instrument_symbol: str) -> str:
@@ -116,7 +135,7 @@ def create_specific_instrument_regex(instrument_symbol: str) -> str:
 
 
 def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
-    """Creates a regular expression pattern to target all the instrument names relevant to a source.
+    """Creates a regular expression pattern to target all the instrument symbols in a list.
 
     The function creates a regular expression pattern to target, within a specific DC
     message, the portion of the message containing the complete instrument symbol, for
@@ -178,7 +197,7 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
     return re.compile("|".join(regexes))
 
 
-def retrieve_source_name_pairs(
+def retrieve_source_symbol_pairs(
     path_to_reference_data_file: pathlib.Path,
     message_level_pattern: str,
     instrument_level_pattern: str
@@ -189,19 +208,19 @@ def retrieve_source_name_pairs(
             if re.search(message_level_pattern, line.decode("utf8")):
                 source_name_pairs.append(
                     (
-                     get_source_from_file_path(path_to_reference_data_file),
+                     get_source_id_from_file_path(path_to_reference_data_file),
                      re.search(instrument_level_pattern, line.decode('utf8'))[0]
                      ),
                 )
     return source_name_pairs
 
 
-def generate_config_file_path(directory: str) -> pathlib.Path:
+def generate_config_file_path(directory_path: str) -> pathlib.Path:
     """Generates the file path of the configuration file in a given directory.
 
     Parameters
     ----------
-    directory: str
+    directory_path: str
         The path to the directory where the configuration file is to be placed.
 
     Returns
@@ -209,6 +228,6 @@ def generate_config_file_path(directory: str) -> pathlib.Path:
     pathlib.Path
         A Path object providing the full path to the configuration file.
     """
-    return pathlib.Path(directory).joinpath(
+    return pathlib.Path(directory_path).joinpath(
         f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
     )
