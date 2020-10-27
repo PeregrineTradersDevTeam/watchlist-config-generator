@@ -1,8 +1,10 @@
+import csv
+import datetime
 import bz2
 import json
 import pathlib
 import re
-from typing import Dict, List, Pattern
+from typing import Dict, List, Optional, Pattern, Tuple
 
 
 def discover_reference_data_files(path_to_data_folder: str) -> List[pathlib.Path]:
@@ -180,14 +182,16 @@ def retrieve_source_name_pairs(
     path_to_reference_data_file: pathlib.Path,
     message_level_pattern: str,
     instrument_level_pattern: str
-) -> List[str]:
+) -> List[Tuple[str, str]]:
     source_name_pairs = []
     with bz2.open(path_to_reference_data_file, 'rb') as infile:
         for line in infile:
             if re.search(message_level_pattern, line.decode("utf8")):
                 source_name_pairs.append(
-                    f"{get_source_from_file_path(path_to_reference_data_file)},"
-                    f"{re.search(instrument_level_pattern, line.decode('utf8'))[0]}"
+                    (
+                     get_source_from_file_path(path_to_reference_data_file),
+                     re.search(instrument_level_pattern, line.decode('utf8'))[0]
+                     ),
                 )
     return source_name_pairs
 
