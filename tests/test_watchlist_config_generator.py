@@ -134,6 +134,49 @@ class TestSearchFiles:
         # Cleanup - none
 
 
+class TestFindAllCorerefFiles:
+    def test_discovery_of_coreref_files(self):
+        # Setup
+        data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
+        # Exercise
+        discovered_coreref_files = wcg.find_all_coreref_files(data_dir)
+        # Verify
+        expected_coreref_files = [
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S207',
+                'CORE',
+                'COREREF_207_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S367',
+                'CORE',
+                'COREREF_367_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S673',
+                'CORE',
+                'COREREF_673_20201016.txt.bz2',
+            ),
+        ]
+        assert discovered_coreref_files == expected_coreref_files
+        # Cleanup - none
+
+
 class TestJsonLoader:
     def test_extrapolation_of_source_instrument_view(self, get_source_symbols_dict):
         # Setup
