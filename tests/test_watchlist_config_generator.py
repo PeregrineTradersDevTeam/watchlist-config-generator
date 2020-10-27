@@ -5,12 +5,16 @@ import pytest
 from watchlist_config_generator import watchlist_config_generator as wcg
 
 
-class TestDiscoverReferenceDataFiles:
-    def test_discovery_of_reference_data_files(self, tmp_path):
+class TestSearchFiles:
+    def test_search_of_crossref_file_in_a_directory(self):
         # Setup
-        data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
+        directory_to_search = (
+            pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir' /
+            "2020" / "10" / "16" / "S207" / "CROSS"
+        )
+        pattern = "CROSSREF*.txt.bz2"
         # Exercise
-        discovered_reference_data_files = wcg.discover_reference_data_files(data_dir)
+        discovered_reference_data_files = wcg.search_files(directory_to_search, pattern)
         # Verify
         expected_files = [
             pathlib.Path(__file__).parent.joinpath(
@@ -18,43 +22,73 @@ class TestDiscoverReferenceDataFiles:
                 'mock_data_dir',
                 '2020',
                 '10',
-                '23',
-                '207',
+                '16',
+                'S207',
+                'CROSS',
+                'CROSSREF_207_20201016.txt.bz2',
+            ),
+        ]
+        assert discovered_reference_data_files == expected_files
+        # Cleanup - none
+
+    def test_search_of_coreref_files_in_all_subdirectories(self):
+        # Setup
+        data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
+        pattern = "**/COREREF*.txt.bz2"
+        # Exercise
+        discovered_reference_data_files = wcg.search_files(data_dir, pattern)
+        # Verify
+        expected_files = [
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S207',
                 'CORE',
-                'COREREF_207_20201023.txt.bz2',
+                'COREREF_207_20201016.txt.bz2',
             ),
             pathlib.Path(__file__).parent.joinpath(
                 'static_data',
                 'mock_data_dir',
                 '2020',
                 '10',
-                '23',
-                '367',
+                '16',
+                'S367',
                 'CORE',
-                'COREREF_367_20201023.txt.bz2',
+                'COREREF_367_20201016.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
+                '10',
+                '16',
+                'S673',
+                'CORE',
+                'COREREF_673_20201016.txt.bz2',
             ),
         ]
         assert discovered_reference_data_files == expected_files
         # Cleanup - none
 
 
-class TestExtrapolateSourceInstrumentsView:
+class TestJsonLoader:
     def test_extrapolation_of_source_instrument_view(self, get_source_symbols_dict):
         # Setup
         path_to_instruments_file = (
             pathlib.Path(__file__).resolve().parent / 'static_data' / 'instruments.json'
         )
         # Exercise
-        extrapolated_source_instrument_view = wcg.extrapolate_source_instruments_view(
-            path_to_instruments_file
-        )
+        extrapolated_source_instrument_view = wcg.json_loader(path_to_instruments_file)
         # Verify
         expected_source_instrument_view = get_source_symbols_dict
         assert extrapolated_source_instrument_view == expected_source_instrument_view
         # Cleanup - none
 
 
-class TestGetSourceFromFilePath:
+class TestGetSourceIdFromFilePath:
     @pytest.mark.parametrize(
         'file_path, source', [
             (pathlib.Path("C:/Users/SomeUser/Data/COREREF_612_20201023.txt.bz2"), '612'),
@@ -64,7 +98,7 @@ class TestGetSourceFromFilePath:
     def test_retrieval_of_source_code(self, file_path, source):
         # Setup
         # Exercise
-        retrieved_source_code = wcg.get_source_from_file_path(file_path)
+        retrieved_source_code = wcg.get_source_id_from_file_path(file_path)
         # Verify
         assert retrieved_source_code == source
         # Cleanup - none
@@ -163,7 +197,8 @@ class TestRetrieveSourceNamePairs:
     def test_retrieval_of_source_name_pairs(self):
         # Setup
         path_to_reference_data_file = (
-            pathlib.Path(__file__).resolve().parent / "static_data" / "COREREF_207_20201026.txt.bz2"
+            pathlib.Path(__file__).resolve().parent / "static_data" / "mock_data_dir" /
+            "2020" / "10" / "16" / "S207" / "CORE" / "COREREF_207_20201016.txt.bz2"
         )
         instrument_level_regex = (
             r"(F:FDAX\\[A-Z][0-9]{2}|F:FESX\\[A-Z][0-9]{2}|F:FBTP\\[A-Z][0-9]{2}|"
@@ -174,7 +209,7 @@ class TestRetrieveSourceNamePairs:
             r"F:FBTS\\[A-Z][0-9]{2})"
         )
         # Exercise
-        retrieved_source_name_pairs = wcg.retrieve_source_name_pairs(
+        retrieved_source_name_pairs = wcg.retrieve_source_symbol_pairs(
             path_to_reference_data_file, message_level_regex, instrument_level_regex
         )
         # Verify
