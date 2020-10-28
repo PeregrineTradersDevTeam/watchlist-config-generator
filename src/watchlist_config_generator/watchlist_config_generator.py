@@ -5,8 +5,6 @@ import json
 import pathlib
 import re
 from typing import Dict, List, Pattern, Tuple
-import multiprocessing
-from itertools import repeat
 
 
 def search_files(path_to_folder: str, search_pattern: str) -> List[pathlib.Path]:
@@ -377,4 +375,3 @@ def config_file_writer(directory_path: str, source_name_pairs: List[Tuple[str, s
             csv_writer.writerow(item)
     return (f"Configuration file successfully written.\n"
             f"{len(source_name_pairs)} symbols were added to the file.")
-
