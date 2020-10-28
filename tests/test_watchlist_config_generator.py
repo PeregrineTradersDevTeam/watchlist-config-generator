@@ -473,3 +473,24 @@ class TestConfigFileWriter:
         assert file_content == expected_file_content
         # Cleanup - none
         path_to_file.unlink(missing_ok=True)
+
+    def test_return_the_expected_summary(self):
+        # Setup
+        target_directory = pathlib.Path(__file__).resolve().parent / "static_data"
+        source_symbol_pairs = [
+            ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'),
+            ('673', 'F2:ES\\Z20'), ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'),
+            ('673', 'F2:NQ\\M21'), ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'),
+            ('673', 'F2:NQ\\Z21')
+        ]
+        # Exercise
+        generated_summary = wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
+        # Verify
+        expected_summary = "Write complete. Written 10 symbols to the file."
+        assert generated_summary == expected_summary
+        # Cleanup
+        path_to_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" /
+            f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        )
+        path_to_file.unlink(missing_ok=True)
