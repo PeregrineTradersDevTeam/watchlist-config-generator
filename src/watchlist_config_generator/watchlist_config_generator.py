@@ -4,7 +4,7 @@ import datetime
 import json
 import pathlib
 import re
-from typing import Dict, List, Optional, Pattern, Tuple
+from typing import Dict, List, Pattern, Tuple
 
 
 def search_files(path_to_folder: str, search_pattern: str) -> List[pathlib.Path]:
