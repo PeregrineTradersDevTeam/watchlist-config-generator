@@ -315,3 +315,28 @@ def generate_config_file_path(directory_path: str) -> pathlib.Path:
     return pathlib.Path(directory_path).joinpath(
         f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
     )
+
+
+def config_file_writer(directory_path: str, source_name_pairs: List[Tuple[str, str]]) -> str:
+    """Writes the source_id-symbols pairs to a csv file with a compliant header.
+
+    Parameters
+    ----------
+    directory_path: str
+        The path where the file should be written.
+    source_name_pairs: List[Tuple[str, str]]
+        A list of tuples, each containing a source_id, contract's symbol pair.
+
+    Returns
+    -------
+    str
+        The summary of the operation.
+    """
+    pathlib.Path(directory_path).mkdir(parents=True, exist_ok=True)
+    file_path = generate_config_file_path(directory_path)
+    with file_path.open('w', newline='') as csv_file:
+        csv_writer = csv.writer(csv_file, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        csv_writer.writerow(("sourceId", "RTSsymbol"))
+        for item in source_name_pairs:
+            csv_writer.writerow(item)
+    return f"Write complete. Written {len(source_name_pairs)} symbols to the file."
