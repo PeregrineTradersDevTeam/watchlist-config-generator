@@ -5,6 +5,8 @@ import json
 import pathlib
 import re
 from typing import Dict, List, Pattern, Tuple
+import multiprocessing
+from itertools import repeat
 
 
 def search_files(path_to_folder: str, search_pattern: str) -> List[pathlib.Path]:
@@ -244,17 +246,61 @@ def retrieve_source_symbol_pairs(
         A list of tuples each containing the source_id and the instrument's symbol.
 
     """
-    source_name_pairs = []
+    source_symbol_pairs = []
     with bz2.open(path_to_coreref_file, 'rb') as infile:
         for line in infile:
             if re.search(message_level_pattern, line.decode("utf8")):
-                source_name_pairs.append(
+                source_symbol_pairs.append(
                     (
                      get_source_id_from_file_path(path_to_coreref_file),
                      re.search(instrument_level_pattern, line.decode('utf8'))[0]  # type: ignore
                      ),
                 )
-    return source_name_pairs
+    return source_symbol_pairs
+
+
+def process_coreref_file(
+    coreref_file_path: pathlib.Path,
+    source_symbols_dictionary: Dict[str, List[str]],
+) -> List[Tuple[str, str]]:
+    """Searches for source-specific instrument symbols in a COREREF file.
+
+    The function detects the source id specific to the input COREREF file, retrieves from
+    the source_symbols_dictionary the list of instrument's symbols relevant for that
+    source_id, and proceeds with searching for all the contracts corresponding to the
+    source-specific subset of symbols.
+
+    Parameters
+    ----------
+    coreref_file_path: pathlib.Path
+        A pathlib.Path object pointing to the location of the COREREF file.
+    source_symbols_dictionary: Dict[str, List[str]]
+        A dictionary containing "source_id":["instrument_symbol"] key-value pairs,
+        containing, for each source_id, the list of symbols of interest for that specific
+        source.
+
+    Returns
+    -------
+    List[Tuple[str, str]]
+        A list of tuples, each containing the source_id, and a contract's symbol.
+    """
+    top_level_regex = create_dc_message_level_pattern(
+            get_source_id_from_file_path(coreref_file_path),
+            retrieve_instruments(
+                get_source_id_from_file_path(coreref_file_path),
+                source_symbols_dictionary,
+            )
+        )
+    symbol_level_regex = create_instrument_level_pattern(
+            retrieve_instruments(
+                get_source_id_from_file_path(coreref_file_path),
+                source_symbols_dictionary,
+            )
+        )
+    source_specific_symbols = retrieve_source_symbol_pairs(
+            coreref_file_path, top_level_regex, symbol_level_regex
+        )
+    return source_specific_symbols
 
 
 def process_all_coreref_files(
@@ -285,17 +331,7 @@ def process_all_coreref_files(
     """
     discovered_symbols = []
     for file_path in coreref_file_paths:
-        top_level_regex = create_dc_message_level_pattern(
-            get_source_id_from_file_path(file_path),
-            retrieve_instruments(get_source_id_from_file_path(file_path), source_symbols_dictionary)
-        )
-        symbol_level_regex = create_instrument_level_pattern(
-            retrieve_instruments(get_source_id_from_file_path(file_path), source_symbols_dictionary)
-        )
-        source_specific_symbols = retrieve_source_symbol_pairs(
-            file_path, top_level_regex, symbol_level_regex
-        )
-        discovered_symbols.extend(source_specific_symbols)
+        discovered_symbols.extend(process_coreref_file(file_path, source_symbols_dictionary))
     return discovered_symbols
 
 
@@ -339,4 +375,6 @@ def config_file_writer(directory_path: str, source_name_pairs: List[Tuple[str, s
         csv_writer.writerow(("sourceId", "RTSsymbol"))
         for item in source_name_pairs:
             csv_writer.writerow(item)
-    return f"Write complete. Written {len(source_name_pairs)} symbols to the file."
+    return (f"Configuration file successfully written.\n"
+            f"{len(source_name_pairs)} symbols were added to the file.")
+
