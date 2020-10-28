@@ -1,3 +1,27 @@
+"""Implements an automatic Watchlist API configuration file generator.
+
+The module is designed to automate the process of creating configuration files that define
+the list of contracts to which the user wants to subscribe. In particular, this module was
+designed to solve the issue of creating such files when the instruments to subscribe to
+are futures contracts. Due to the presence of contracts on the same underlying presenting
+different maturities that are traded at the same time, the manual creation of the
+configuration files requires the user to search, for each instrument of interest, all the
+maturities that are traded at that moment. Having to deal with multiple sources and
+multiple instruments at a time, the process can become time consuming.
+
+To automate the creation of the configuration files, the module makes use of the reference
+data files that are downloaded every day as part of the download of the Watchlist data.
+In particular, the current implementation uses the information contained in the COREREF
+files to discover, using regular expressions, all the traded maturities, for a specific
+symbol, that were available the previous day. The program repeats the process for all the
+COREREF files that are passed as an input.
+
+In order for the program to know which symbols are of interest for the user, a JSON file
+with a structure {"source_id": ["symbol"]} is used. The module includes the functions that
+are used to process this file and convert its content in a Python dictionary that can be
+used by the functions down the data stream.
+"""
+
 import bz2
 import csv
 import datetime
@@ -29,18 +53,22 @@ def search_files(path_to_folder: str, search_pattern: str) -> List[pathlib.Path]
 
     Examples
     --------
-    Search for all the .py files in the current directory:
+    Search for all the .py files in the current directory
+
     >>> python_files = search_files('.', '*.py')
 
-    Search for all the .py files in the direct sub-directory of the current one:
+    Search for all the .py files in the direct sub-directory of the current one
+
     >>> python_files = search_files('.', '*/*.py')
 
-    Search for all the .py files in all the directories and subdirectories rescursively:
+    Search for all the .py files in all the directories and subdirectories rescursively
+
     >>> python_files = search_files('.', '**/*.py')
 
     Search for all the files that have a name starting with COREREF and a txt.bz2
-    extension in all the subdirectories recursively:
-    >>>coreref_files = search_files('.', '**/COREREF*.txt.bz2')
+    extension in all the subdirectories recursively
+
+    >>> coreref_files = search_files('.', '**/COREREF*.txt.bz2')
     """
     data_folder = pathlib.Path(path_to_folder)
     return list(data_folder.glob(search_pattern))
@@ -128,11 +156,11 @@ def retrieve_instruments(
 
 
 def create_specific_instrument_regex(instrument_symbol: str) -> str:
-    """Creates a regular expression specific to a futures instrument symbol.
+    r"""Creates a regular expression specific to a futures instrument symbol.
 
     The function uses the facts that futures contracts have a naming convention that
     follows the structure "<instrument_symbol>\\\\<month_code><expiration_year>" (e.g. for
-    the EURO STOXX 50 future, with delivery March 2021, the contract name is F:FESX\\\\H21
+    the EURO STOXX 50 future, with delivery March 2021, the contract name is F:FESX\\H21
     ), to create symbol-specific regular expressions.
 
     Parameters
@@ -215,7 +243,7 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
 def retrieve_source_symbol_pairs(
     path_to_coreref_file: pathlib.Path,
     message_level_pattern: str,
-    instrument_level_pattern: str
+    instrument_level_pattern: str,
 ) -> List[Tuple[str, str]]:
     """Searches for specific instrument symbols in a COREREF reference data file.
 
@@ -249,9 +277,8 @@ def retrieve_source_symbol_pairs(
         for line in infile:
             if re.search(message_level_pattern, line.decode("utf8")):
                 source_symbol_pairs.append(
-                    (
-                     get_source_id_from_file_path(path_to_coreref_file),
-                     re.search(instrument_level_pattern, line.decode('utf8'))[0]  # type: ignore
+                    (get_source_id_from_file_path(path_to_coreref_file),
+                     re.search(instrument_level_pattern, line.decode('utf8'))[0],  # type: ignore
                      ),
                 )
     return source_symbol_pairs
@@ -283,22 +310,19 @@ def process_coreref_file(
         A list of tuples, each containing the source_id, and a contract's symbol.
     """
     top_level_regex = create_dc_message_level_pattern(
+        get_source_id_from_file_path(coreref_file_path),
+        retrieve_instruments(
             get_source_id_from_file_path(coreref_file_path),
-            retrieve_instruments(
-                get_source_id_from_file_path(coreref_file_path),
-                source_symbols_dictionary,
-            )
-        )
+            source_symbols_dictionary,
+        ),
+    )
     symbol_level_regex = create_instrument_level_pattern(
-            retrieve_instruments(
-                get_source_id_from_file_path(coreref_file_path),
-                source_symbols_dictionary,
-            )
-        )
-    source_specific_symbols = retrieve_source_symbol_pairs(
-            coreref_file_path, top_level_regex, symbol_level_regex
-        )
-    return source_specific_symbols
+        retrieve_instruments(
+            get_source_id_from_file_path(coreref_file_path),
+            source_symbols_dictionary,
+        ),
+    )
+    return retrieve_source_symbol_pairs(coreref_file_path, top_level_regex, symbol_level_regex)
 
 
 def process_all_coreref_files(
@@ -347,7 +371,7 @@ def generate_config_file_path(directory_path: str) -> pathlib.Path:
         A Path object providing the full path to the configuration file.
     """
     return pathlib.Path(directory_path).joinpath(
-        f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
+        f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv",
     )
 
 
