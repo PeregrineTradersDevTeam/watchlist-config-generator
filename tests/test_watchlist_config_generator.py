@@ -329,6 +329,29 @@ class TestRetrieveSourceSymbolPairs:
         # Cleanup - none
 
 
+class TestProcessCorerefFile:
+    def test_discovery_of_contract_symbols(self, get_source_symbols_dict):
+        # Setup
+        file_to_process = pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
+                'COREREF_673_20201016.txt.bz2'
+                )
+        dictionary_of_symbols = get_source_symbols_dict
+        # Exercise
+        discovered_contract_symbols = wcg.process_coreref_file(
+            file_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+            ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'),
+            ('673', 'F2:ES\\Z20'), ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'),
+            ('673', 'F2:NQ\\M21'), ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'),
+            ('673', 'F2:NQ\\Z21')
+        ]
+        assert discovered_contract_symbols == expected_symbols
+        # Cleanup - none
+
+
 class TestProcessAllCorerefFiles:
     def test_discovery_of_all_symbols(self, get_source_symbols_dict):
         # Setup
@@ -392,7 +415,7 @@ class TestConfigFileWriter:
             f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
         )
         assert expected_file_path.is_file() is True
-        # Cleanup - none
+        # Cleanup
         target_directory.joinpath(expected_file_path).unlink(missing_ok=True)
 
     def test_written_file_has_proper_name(self):
@@ -413,7 +436,7 @@ class TestConfigFileWriter:
         # Verify
         expected_file_name = f"watchlist_config_{datetime.datetime.utcnow().strftime('%Y%m%d')}.csv"
         assert file_name == expected_file_name
-        # Cleanup - none
+        # Cleanup
         target_directory.joinpath(expected_file_name).unlink(missing_ok=True)
 
     def test_file_has_proper_header(self):
@@ -432,9 +455,9 @@ class TestConfigFileWriter:
             csv_reader = csv.reader(csv_file, delimiter=',')
             for index, row in enumerate(csv_reader):
                 if index == 0:
-                    file_header =  ','.join(row)
+                    file_header = ','.join(row)
         assert file_header == expected_header
-        # Cleanup - none
+        # Cleanup
         path_to_file.unlink(missing_ok=True)
 
     def test_file_has_expected_content(self):
@@ -462,16 +485,10 @@ class TestConfigFileWriter:
         )
         with path_to_file.open('r') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
-            # file_content = ''
-            # for index, row in enumerate(csv_reader):
-            #     if index == 0:
-            #         file_content + ','.join(row)
-            #     else:
-            #         file_content + '\n' + ','.join(row)
             rows = [','.join(row) for row in csv_reader]
             file_content = '\n'.join(rows)
         assert file_content == expected_file_content
-        # Cleanup - none
+        # Cleanup
         path_to_file.unlink(missing_ok=True)
 
     def test_return_the_expected_summary(self):
@@ -486,7 +503,8 @@ class TestConfigFileWriter:
         # Exercise
         generated_summary = wcg.config_file_writer(target_directory.as_posix(), source_symbol_pairs)
         # Verify
-        expected_summary = "Write complete. Written 10 symbols to the file."
+        expected_summary = ("Configuration file successfully written.\n"
+                            "10 symbols were added to the file.")
         assert generated_summary == expected_summary
         # Cleanup
         path_to_file = (
