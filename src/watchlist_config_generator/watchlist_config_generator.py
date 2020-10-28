@@ -1,6 +1,6 @@
+import bz2
 import csv
 import datetime
-import bz2
 import json
 import pathlib
 import re
@@ -79,7 +79,7 @@ def json_loader(path_to_json_file: str) -> Dict[str, List[str]]:
         interest for each source.
     """
     with pathlib.Path(path_to_json_file).open('r') as infile:
-        return json.loads(infile.read())
+        return json.loads(infile.read())  # type: ignore
 
 
 def get_source_id_from_file_path(file_path: pathlib.Path) -> str:
@@ -124,7 +124,7 @@ def retrieve_instruments(
     List[str]
         A list of instrument's symbols as strings.
     """
-    return source_symbols_dictionary.get(source_id)
+    return source_symbols_dictionary.get(source_id)  # type: ignore
 
 
 def create_specific_instrument_regex(instrument_symbol: str) -> str:
@@ -251,7 +251,7 @@ def retrieve_source_symbol_pairs(
                 source_name_pairs.append(
                     (
                      get_source_id_from_file_path(path_to_coreref_file),
-                     re.search(instrument_level_pattern, line.decode('utf8'))[0]
+                     re.search(instrument_level_pattern, line.decode('utf8'))[0]  # type: ignore
                      ),
                 )
     return source_name_pairs
