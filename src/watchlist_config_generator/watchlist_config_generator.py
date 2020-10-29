@@ -28,6 +28,7 @@ import datetime
 import json
 import pathlib
 import re
+import sys
 from typing import Dict, List, Pattern, Tuple
 
 
@@ -273,14 +274,19 @@ def retrieve_source_symbol_pairs(
 
     """
     source_symbol_pairs = []
-    with bz2.open(path_to_coreref_file, 'rb') as infile:
-        for line in infile:
-            if re.search(message_level_pattern, line.decode("utf8")):
-                source_symbol_pairs.append(
-                    (get_source_id_from_file_path(path_to_coreref_file),
-                     re.search(instrument_level_pattern, line.decode('utf8'))[0],  # type: ignore
-                     ),
-                )
+    try:
+        with bz2.open(path_to_coreref_file, 'rb') as infile:
+            for line in infile:
+                if re.search(message_level_pattern, line.decode("utf8")):
+                    source_symbol_pairs.append(
+                        (get_source_id_from_file_path(path_to_coreref_file),
+                        re.search(instrument_level_pattern, line.decode('utf8'))[0],  # type: ignore
+                        ),
+                    )
+    except OSError:
+        sys.exit(f"Process finished with exit code 1\n"
+                 f"Attempted to process: {path_to_coreref_file.as_posix()}\n"
+                 f"The file has extension:'{path_to_coreref_file.suffix}'. Expected:'.bz2'")
     return source_symbol_pairs
 
 
