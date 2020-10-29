@@ -328,6 +328,43 @@ class TestRetrieveSourceSymbolPairs:
         assert retrieved_source_name_pairs == expected_source_name_pairs
         # Cleanup - none
 
+    def test_system_exit(self):
+        # Setup
+        path_to_coreref_file = pathlib.Path(__file__).resolve().parent.joinpath(
+            'static_data', 'COREREF_673_20201016.txt',
+        )
+        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        # Exercise
+        with pytest.raises(SystemExit) as system_exit:
+            wcg.retrieve_source_symbol_pairs(
+                path_to_coreref_file, message_level_pattern, instrument_level_pattern,
+            )
+        # Verify
+        assert system_exit.type == SystemExit
+        # Cleanup - none
+
+    def test_system_exit_message(self):
+        # Setup
+        path_to_coreref_file = pathlib.Path(__file__).resolve().parent.joinpath(
+            'static_data', 'COREREF_673_20201016.txt',
+        )
+        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        # Exercise
+        with pytest.raises(SystemExit) as system_exit:
+            wcg.retrieve_source_symbol_pairs(
+                path_to_coreref_file, message_level_pattern, instrument_level_pattern,
+            )
+        # Verify
+        expected_exit_message = (
+            f"Process finished with exit code 1\n"
+            f"Attempted to process: {path_to_coreref_file.as_posix()}\n"
+            f"The file has extension:'.txt'. Expected:'.bz2'"
+        )
+        assert system_exit.value.code == expected_exit_message
+        # Cleanup - none
+
 
 class TestProcessCorerefFile:
     def test_discovery_of_contract_symbols(self, get_source_symbols_dict):
