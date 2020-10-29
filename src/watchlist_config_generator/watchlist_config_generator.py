@@ -246,7 +246,7 @@ def retrieve_source_symbol_pairs(
     message_level_pattern: str,
     instrument_level_pattern: str,
 ) -> List[Tuple[str, str]]:
-    """Searches for specific instrument symbols in a COREREF reference data file.
+    """Searches for specific instrument symbols in a bz2 compressed COREREF reference data file.
 
     The function uses regular expressions to first isolate only those reference data
     messages that belong to a specific message type (DC) and refer to a specific subset of
@@ -259,7 +259,8 @@ def retrieve_source_symbol_pairs(
     ----------
     path_to_coreref_file: pathlib.Path
         A pathlib.Path object pointing to a COREREF file containing the reference data to
-        search.
+        search. The file has to be bz2 compressed (the files are bz2 compressed when they
+        are downloaded in first place from the Datavault API).
     message_level_pattern: str
         A string containing the regex pattern used to filter only a specific type of
         reference data message.
@@ -280,8 +281,8 @@ def retrieve_source_symbol_pairs(
                 if re.search(message_level_pattern, line.decode("utf8")):
                     source_symbol_pairs.append(
                         (get_source_id_from_file_path(path_to_coreref_file),
-                        re.search(instrument_level_pattern, line.decode('utf8'))[0],  # type: ignore
-                        ),
+                         re.search(instrument_level_pattern, line.decode('utf8'))[0],  # type: ignore
+                         ),
                     )
     except OSError:
         sys.exit(f"Process finished with exit code 1\n"
