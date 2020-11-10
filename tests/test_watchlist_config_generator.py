@@ -326,6 +326,52 @@ class TestCreateOptionsRegex:
         # Cleanup - none
 
 
+class TestCreateFixedIncomeRegex:
+    def test_creation_of_fixed_income_regex(self):
+        # Setup
+        instrument_symbol_input = "B:01NU"
+        # Exercise
+        generated_regex = wcg.create_fixed_income_regex(instrument_symbol_input)
+        # Verify
+        expected_regex = r"B:01NU\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"
+        assert generated_regex == expected_regex
+        # Cleanup - none
+
+
+class TestCreateForwardsRegex:
+    def test_creation_of_forwards_regex_without_wildcard(self):
+        # Setup
+        instrument_symbol_input = "R2:GAS\\5D"
+        # Exercise
+        generated_regex = wcg.create_forwards_regex(instrument_symbol_input)
+        # Verify
+        expected_regex = r"R2:GAS\\5D"
+        assert generated_regex == expected_regex
+        # Cleanup - none
+
+    def test_creation_of_forwards_regex_with_wildcard(self):
+        # Setup
+        instrument_symbol_input = "R2:GAS*"
+        # Exercise
+        generated_regex = wcg.create_forwards_regex(instrument_symbol_input)
+        # Verify
+        expected_regex = r"R2:GAS\\[A-Z0-9]{2}"
+        assert generated_regex == expected_regex
+        # Cleanup - none
+
+
+class TestCreateIndexRegex:
+    def test_creation_of_index_regex(self):
+        # Setup
+        instrument_symbol_input = "I:KOSPI200"
+        # Exercise
+        generated_regex = wcg.create_index_regex(instrument_symbol_input)
+        # Verify
+        expected_regex = r"I:KOSPI200"
+        assert generated_regex == expected_regex
+        # Cleanup - none
+
+
 class TestCreateSpecificInstrumentRegex:
     @pytest.mark.skip()
     def test_creation_of_instrument_specific_regex(self):
