@@ -196,7 +196,59 @@ def create_futures_regex(input_symbol: str) -> str:
     are the last two digits of the year, and dd is 2-digit day of the month that is used
     only for those futures where the day of the month is required to identify the security).
 
-    The function logic allows the user to pass a complete option name or to use wildcards
+    The function logic allows the user to pass a complete futures name, or to pass the
+    root symbol prefixed by the type and optional session indicator, followed by a *
+    wildcard flag. In the former case, the resulting regex expression will be such that
+    it will match only the specific security that is passed as an input (for example, by
+    passing F:FDAX\\H21, the resulting regular expression will only match the DAX futures
+    contract with expiration in March 2021). If only the symbol root (with all the
+    necessary prefixes) followed by the * wildcard flag, is passed as an input, the
+    resulting regex will be such to allow matching all the possible combinations of month
+    year (and optionally day) of expiration.
+
+    Parameters
+    ----------
+    input_symbol: str
+        A standard futures symbol consisting of the root symbol prefixed with the type
+        identifier (F) and optional session indicator. If the user wants the function to
+        produce a regular expression that can match all the possible combinations of
+        month, year (and optionally day) expirations, then the root symbol will be followed
+        by the * wildcard flag (for example F:FDAX* will result in a regular expression
+        that will match all the possible combinations of root symbol, month code, year and
+        eventually day codes). Alternatively, if the user is only interested in creating
+        a regular expression that matches literally only a specific contract, the passed
+        instrument symbol (prefixed with the type identifier and optional session indicator)
+        will be followed by a backslash and a specific maturity, identified by the month
+        code followed by the 2-digit year code and the 2-digit day code for those contracts
+        that are identified also by the day of the month.
+
+    Returns
+    -------
+    str
+        Depending on the input symbol, the function returns a regular expression pattern
+        that either matches literally a specific security symbol or one that matches all
+        the possible maturities of the root symbol passed as an input.
+    """
+    if not input_symbol.endswith('*'):
+        symbol_components = input_symbol.split("\\")
+        return rf"{symbol_components[0]}\\{symbol_components[1]}"
+    return rf"{input_symbol.rstrip('*')}\\[A-Z][0-9]{{2,4}}"
+
+
+def create_options_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the options symbology.
+
+    To create the regular expression pattern, the function uses the fact that within the
+    ICE consolidated feed all the option contracts are identified by the root symbol (a
+    unique mnemonic based on the exchange ticker or the ISIN, where no exchange ticker is
+    available), prefixed with the type and the optional session indicator; a backslash,
+    followed by the expiration date (formatted as MYYdd, where M is the month code, YY
+    are the last two digits of the year, and dd is 2-digit day of the month that is used
+    only for those futures where the day of the month is required to identify the
+    security); another backslash, followed by the full strike price including the decimal
+    point, with the leading zeroes removed.
+
+    The function logic allows the user to pass a complete option symbol or to use wildcards
     to specify the type of matching that the generated regular expression should support.
     In particular, if the user passes to the function the root symbol (prefixed by the
     type and the optional session indicator) followed by the ** wildcard flag, the function
@@ -236,55 +288,6 @@ def create_futures_regex(input_symbol: str) -> str:
     str
         Depending on the input symbol, the function returns a regular expression pattern
         that either matches literally a specific security symbol or one that matches all
-        the possible maturities of the root symbol passed as an input.
-    """
-    if not input_symbol.endswith('*'):
-        symbol_components = input_symbol.split("\\")
-        return rf"{symbol_components[0]}\\{symbol_components[1]}"
-    return rf"{input_symbol.rstrip('*')}\\[A-Z][0-9]{{2,4}}"
-
-
-def create_options_regex(input_symbol: str) -> str:
-    """Creates a regular expression pattern to match the options symbology.
-
-    To create the regular expression pattern, the function uses the fact that within the
-    ICE consolidated feed all the option contracts are identified by the root symbol (a
-    unique mnemonic based on the exchange ticker or the ISIN, where no exchange ticker is
-    available), prefixed with the type and the optional session indicator; a backslash,
-    followed by the expiration date (formatted as MYYdd, where M is the month code, YY
-    are the last two digits of the year, and dd is 2-digit day of the month that is used
-    only for those futures where the day of the month is required to identify the
-    security); another backslash, followed by the full strike price including the decimal
-    point, with the leading zeroes removed.
-
-    The function logic allows the user to pass a complete option name, or to pass the
-    root symbol prefixed by the type and optional session indicator, followed by a *
-    wildcard flag. In the former case, the resulting regex expression will be such that
-    it will match only the specific contract that is passed as an input, while in the
-    latter scenario, the resulting regex will be such to allow matching all the
-    available combinations of month code and year of expiration.
-
-    Parameters
-    ----------
-    input_symbol: str
-        A standard futures symbol consisting of the root symbol prefixed with the type
-        identifier (F) and optional session indicator. If the user wants the function to
-        produce a regular expression that can match all the possible combinations of
-        month, year and day (optionally) expirations, then the root symbol will be followed
-        by the * wildcard flag (for example F:FDAX* will result in a regular expression
-        that will match all the possible combinations of root symbol, month code, year and
-        eventually day codes). Alternatively, if the user is only interested in creating
-        a regular expression that matches literally only a specific contract, the passed
-        instrument symbol (prefixed with the type identifier and optional session indicator)
-        will be followed by a backslash and a specific maturity, identified by the month
-        code followed by the 2-digit year code and the 2-digit day code for those contracts
-        that are identified also by the day of the month.
-
-    Returns
-    -------
-    str
-        Depending on the input symbol, the function returns a regular expression pattern
-        that either matches literally a specific security symbol or one that matches all
         the possible combinations of maturities and strike prices given a root symbol, or
         one that matches all the possible strike prices given a root symbol and a specific
         maturity.
@@ -300,10 +303,107 @@ def create_options_regex(input_symbol: str) -> str:
             return rf"{symbol_components[0]}\\{symbol_components[1].rstrip('*')}\\[0-9.]{{1,10}}"
 
 
+def create_fixed_income_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the fixed income symbology.
+
+    To create the regular expression patter, the function uses the fact that within the
+    ICE consolidated feed, all the fixed income instruments are identified by the root
+    symbol ( a unique mnemonic based on the exchange ticker or the ISIN, where no exchange
+    ticker is available), prefixed with the type and the optional session indicator. In
+    addition to this minimal symbology setup, fixed income symbols can present optional
+    elements such as the "dirty bond" marker and the sub-market indicator.
+
+    The function only requires the root symbol, prefixed with the type and the optional
+    session indicator, to generate a regular expression pattern, and takes care to
+    autonomously extend the pattern to match as well all the optional components of the
+    symbol.
+
+    Parameters
+    ----------
+    input_symbol: str
+        A fixed income symbol consisting of the root symbol prefixed with the type
+        identifier (B) and optional session indicator.
+
+    Returns
+    -------
+    str
+        The regular expression pattern that matches the input symbol as well as all the
+        optional components.
+    """
+    return rf"{input_symbol}\\{{0,1}}D{{0,1}}@{{0,1}}[a-zA-Z0-9]{{1,10}}"
+
+
+def create_forwards_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the forwards symbology.
+
+    To create the regular expression, the function uses the fact that within the ICE
+    consolidated feed all the forwards contracts are identified by the root symbol (a
+    unique mnemonic based on the exchange ticker or the ISIN, where no exchange ticker is
+    available), prefixed with the type and optional session indicator; a backslash,
+    followed by a relative term indicator that expresses the delivery date relatively to
+    today (for example SP characterise a spot contract, 5D a contract with delivery date
+    in 5 days, 2Y a contract with delivery date in 2 years etc.).
+
+    The function logic allows the user to pass a complete forward contract symbol or to
+    use a wildcard flag. In case a full forward symbol is passed to the function, the
+    resulting regex expression will be such that it will match only that specific
+    contract (for example, passing R2:GAS\\5D as an input, will result in the function
+    creating a regular expression matching only the forward contract for GAS traded after
+    hours with 5-day delivery). Conversely, if it is passed as an input only the root
+    symbol (prefixed with the type and optional session indicator) followed by the *
+    wildcard flag, the function will generate a regular expression that can match all the
+    possible relative terms (for example, passing R2:GAS*, will produce a regular
+    expression that can match all the available relative delivery dates of the GAS
+    forward).
+
+    Parameters
+    ----------
+    input_symbol: str
+        Either a forward symbol consisting of the root symbol prefixed with the type
+        identifier (R) and the optional session indicator, followed by a backslash and
+        the chosen relative delivery term, or the root symbol (with all the necessary
+        prefixes) followed by the * wildcard flag.
+
+    Returns
+    -------
+    str
+        Depending on the input symbol, the function returns a regular expression patter
+        that either matches literally a specific forward contract symbol, or one that
+        matches all the possible relative term indicators for a specific forward's symbol
+        root.
+    """
+    if not input_symbol.endswith("*"):
+        symbol_components = input_symbol.split("\\")
+        return rf"{symbol_components[0]}\\{symbol_components[1]}"
+    else:
+        return rf"{input_symbol.rstrip('*')}\\[A-Z0-9]{{2}}"
+
+
+def create_index_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the index symbology.
+
+    To create the regular expression pattern, the function uses the fact that within the
+    ICE consolidated feed, all the indices are identified by the root symbol (a unique
+    mnemonic based on the exchange ticker or the ISIN), prefixed with the type.
+
+    Parameters
+    ----------
+    input_symbol: str
+        An index symbol consisting of the root symbol prefixed with the type identifier (I).
+
+    Returns
+    -------
+    str
+        The regular expression pattern that matches the index symbol passed as an input.
+
+    """
+    return rf"{input_symbol}"
+
+
 ##########################################################################################
 
 
-def create_specific_instrument_regex(instrument_symbol: str) -> str:
+def create_specific_instrument_regex(input_symbol: str) -> str:
     r"""Creates a regular expression specific to a futures instrument symbol.
 
     The function uses the facts that futures contracts have a naming convention that
@@ -323,7 +423,19 @@ def create_specific_instrument_regex(instrument_symbol: str) -> str:
         The regular expression with embedded the stable part of the instrument symbol.
     """
     # return rf"{instrument_symbol}\\[A-Z][0-9]{{2}}"
-    return rf"{instrument_symbol}"
+
+    if input_symbol.startswith('B'):
+        return create_fixed_income_regex(input_symbol)
+    elif input_symbol.startswith('E'):
+        return create_equity_regex(input_symbol)
+    elif input_symbol.startswith('F'):
+        return create_futures_regex(input_symbol)
+    elif input_symbol.startswith('I'):
+        return create_index_regex(input_symbol)
+    elif input_symbol.startswith('O'):
+        return create_options_regex(input_symbol)
+    elif input_symbol.startswith('R'):
+        return create_forwards_regex(input_symbol)
 
 
 def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
