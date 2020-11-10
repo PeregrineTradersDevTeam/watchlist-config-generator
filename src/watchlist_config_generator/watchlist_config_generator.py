@@ -156,6 +156,153 @@ def retrieve_instruments(
     return source_symbols_dictionary.get(source_id)  # type: ignore
 
 
+def create_equity_regex(instrument_symbol: str) -> str:
+    """Creates a regular expression pattern to match the equity symbology.
+
+    To create the regular expression pattern, the function uses the fact that within the
+    ICE consolidated feed all the equity instruments (equities, ETFs and funds) are
+    identified by the root symbol (a unique mnemonic based on the exchange ticker or
+    the ISIN, where no exchange ticker is available), prefixed with the type and the
+    optional session indicator. In addition to this minimal setup, the regex pattern is
+    extended to include the optional ISO 4217 currency code and the optional sub-market
+    indicator. In this way, the resulting regex can be used to search for all the
+    available instances of a certain equity instrument, just by passing the root symbol
+    prefixed by the type indicator and the eventual session indicator (where required).
+
+    Parameters
+    ----------
+    instrument_symbol: str
+        An equity instrument symbol consisting of the root symbol prefixed with the type
+        identifier (E) and optional session indicator (for example E:PRY is used to
+        indicate Prysmian Group equities).
+
+    Returns
+    -------
+    str
+        The regular expression pattern that includes the root symbol prefixed with the type
+        identifier as well as the optional components (currency code and sub-market).
+    """
+    return rf"{instrument_symbol}-{{0,1}}[A-Z]{{0,3}}@{{0,1}}[a-zA-Z0-9]{{0,10}}"
+
+
+def create_futures_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the standard futures symbology.
+
+    To create the regular expression pattern, the function uses the fact that within the
+    ICE consolidated feed all the standard futures contracts are identified by the root
+    symbol (a unique mnemonic based on the exchange ticker or the ISIN, where no exchange
+    ticker is available), prefixed with the type and the optional session indicator, a
+    backslash, and a delivery date (formatted as MYYdd, where M is the month code, YY
+    are the last two digits of the year, and dd is 2-digit day of the month that is used
+    only for those futures where the day of the month is required to identify the security).
+
+    The function logic allows the user to pass a complete option name or to use wildcards
+    to specify the type of matching that the generated regular expression should support.
+    In particular, if the user passes to the function the root symbol (prefixed by the
+    type and the optional session indicator) followed by the ** wildcard flag, the function
+    will generate a regular expression that will match all the possible combinations of
+    expiration dates and all the possible strike prices, of the root symbol (for example,
+    passing O:PRY** to the function, will result in a regular expression that will match
+    all the possible combinations of maturity and strike price for the Prysmian Group
+    option). Alternatively, if the user wants the regular expression to match all the
+    possible strike prices given a certain root symbol and expiration, it can pass to the
+    function the root symbol (prefixed by the type and the optional session indicator); a
+    backslash, the chosen maturity, followed by the ** wildcard flag (for example,
+    passing O:PRY\\A21* to the function, will result in a regular expression that will
+    match all the possible combination of strike price for the Prysmian Group call option
+    with January 2021 maturity). Finally, if a complete option symbol is passed to the
+    function, without any of the previously shown wildcard flags, the resulting regex
+    expression will be such that it will match only the specific contract that is passed
+    as an input (for example, passing O:PRY\\A21\\17.0 to the function, will result in a
+    regular expression that will match explicitly only the Prysmian Group call option
+    with January 2021 maturity and strike price of 17.0 euro).
+
+    Parameters
+    ----------
+    input_symbol: str
+        An option symbol consisting of the root symbol prefixed with the type
+        identifier (O) and optional session indicator. If the user wants the function to
+        produce a regular expression that can match all the possible combinations of
+        expiration date and strike price, the root symbol will be followed by the **
+        wildcard flag (e.g. O:PRY**). Alternatively, if the user wants a regular
+        expression that can match all the possible strike prices for a certain expiration,
+        the root symbol will be followed by a backslash, the expiration date and the *
+        wildcard flag (e.g. O:PRY\\A21*). Finally, if the regular expression has to match
+        a specific maturity and strike price, the user can pass the complete symbol for
+        the specific contract, without any wildcard (e.g. O:PRY\\A21\\17.0).
+
+    Returns
+    -------
+    str
+        Depending on the input symbol, the function returns a regular expression pattern
+        that either matches literally a specific security symbol or one that matches all
+        the possible maturities of the root symbol passed as an input.
+    """
+    if not input_symbol.endswith('*'):
+        symbol_components = input_symbol.split("\\")
+        return rf"{symbol_components[0]}\\{symbol_components[1]}"
+    return rf"{input_symbol.rstrip('*')}\\[A-Z][0-9]{{2,4}}"
+
+
+def create_options_regex(input_symbol: str) -> str:
+    """Creates a regular expression pattern to match the options symbology.
+
+    To create the regular expression pattern, the function uses the fact that within the
+    ICE consolidated feed all the option contracts are identified by the root symbol (a
+    unique mnemonic based on the exchange ticker or the ISIN, where no exchange ticker is
+    available), prefixed with the type and the optional session indicator; a backslash,
+    followed by the expiration date (formatted as MYYdd, where M is the month code, YY
+    are the last two digits of the year, and dd is 2-digit day of the month that is used
+    only for those futures where the day of the month is required to identify the
+    security); another backslash, followed by the full strike price including the decimal
+    point, with the leading zeroes removed.
+
+    The function logic allows the user to pass a complete option name, or to pass the
+    root symbol prefixed by the type and optional session indicator, followed by a *
+    wildcard flag. In the former case, the resulting regex expression will be such that
+    it will match only the specific contract that is passed as an input, while in the
+    latter scenario, the resulting regex will be such to allow matching all the
+    available combinations of month code and year of expiration.
+
+    Parameters
+    ----------
+    input_symbol: str
+        A standard futures symbol consisting of the root symbol prefixed with the type
+        identifier (F) and optional session indicator. If the user wants the function to
+        produce a regular expression that can match all the possible combinations of
+        month, year and day (optionally) expirations, then the root symbol will be followed
+        by the * wildcard flag (for example F:FDAX* will result in a regular expression
+        that will match all the possible combinations of root symbol, month code, year and
+        eventually day codes). Alternatively, if the user is only interested in creating
+        a regular expression that matches literally only a specific contract, the passed
+        instrument symbol (prefixed with the type identifier and optional session indicator)
+        will be followed by a backslash and a specific maturity, identified by the month
+        code followed by the 2-digit year code and the 2-digit day code for those contracts
+        that are identified also by the day of the month.
+
+    Returns
+    -------
+    str
+        Depending on the input symbol, the function returns a regular expression pattern
+        that either matches literally a specific security symbol or one that matches all
+        the possible combinations of maturities and strike prices given a root symbol, or
+        one that matches all the possible strike prices given a root symbol and a specific
+        maturity.
+    """
+    if not input_symbol.endswith('*'):
+        symbol_components = input_symbol.split("\\")
+        return rf"{symbol_components[0]}\\{symbol_components[1]}\\{symbol_components[2]}"
+    else:
+        if input_symbol[-2:] == "**":
+            return rf"{input_symbol.rstrip('**')}\\[A-Z][0-9]{{2,4}}\\[0-9.]{{1,10}}"
+        elif input_symbol.endswith('*') and input_symbol[-2:] != "**":
+            symbol_components = input_symbol.split("\\")
+            return rf"{symbol_components[0]}\\{symbol_components[1].rstrip('*')}\\[0-9.]{{1,10}}"
+
+
+##########################################################################################
+
+
 def create_specific_instrument_regex(instrument_symbol: str) -> str:
     r"""Creates a regular expression specific to a futures instrument symbol.
 
@@ -175,7 +322,8 @@ def create_specific_instrument_regex(instrument_symbol: str) -> str:
     str
         The regular expression with embedded the stable part of the instrument symbol.
     """
-    return rf"{instrument_symbol}\\[A-Z][0-9]{{2}}"
+    # return rf"{instrument_symbol}\\[A-Z][0-9]{{2}}"
+    return rf"{instrument_symbol}"
 
 
 def create_instrument_level_pattern(instrument_symbols: List[str]) -> str:
@@ -239,6 +387,8 @@ def combine_multiple_regexes(regexes: List[str]) -> Pattern[str]:
         expressions.
     """
     return re.compile("|".join(regexes))
+
+##########################################################################################
 
 
 def retrieve_source_symbol_pairs(
@@ -360,7 +510,10 @@ def process_all_coreref_files(
     """
     discovered_symbols = []
     for file_path in coreref_file_paths:
-        discovered_symbols.extend(process_coreref_file(file_path, source_symbols_dictionary))
+        if get_source_id_from_file_path(file_path) not in source_symbols_dictionary.keys():
+            pass
+        else:
+            discovered_symbols.extend(process_coreref_file(file_path, source_symbols_dictionary))
     return discovered_symbols
 
 
