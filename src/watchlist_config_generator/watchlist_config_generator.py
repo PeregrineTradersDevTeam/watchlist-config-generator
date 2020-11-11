@@ -395,7 +395,6 @@ def create_index_regex(input_symbol: str) -> str:
     -------
     str
         The regular expression pattern that matches the index symbol passed as an input.
-
     """
     return rf"{input_symbol}"
 
@@ -404,25 +403,35 @@ def create_index_regex(input_symbol: str) -> str:
 
 
 def create_specific_instrument_regex(input_symbol: str) -> str:
-    r"""Creates a regular expression specific to a futures instrument symbol.
+    r"""Creates a regular expression specific to the type of the passed security symbol.
 
-    The function uses the facts that futures contracts have a naming convention that
-    follows the structure "<instrument_symbol>\\\\<month_code><expiration_year>" (e.g. for
-    the EURO STOXX 50 future, with delivery March 2021, the contract name is F:FESX\\H21
-    ), to create symbol-specific regular expressions.
+    Since the input symbol consists, at a minimum, of the root symbol, prefixed by the
+    type indicator and optionally by a session indicator, the function infer, just
+    from the input symbol, what type of security the symbol belongs to. Once the type of
+    security is identified, the function returns the regular expression that matches the
+    symbol structure appropriate to the security type and the structure of the input
+    symbol (depending on whether a certain security type allows for the specification of
+    wildcards, the function will return a regular pattern that keeps into account whether
+    a wildcard is specified or whether a regex specific to a certain contract is to
+    generate instead).
 
     Parameters
     ----------
-    instrument_symbol: str
-        The stable part of the instrument symbol as defined by ICE (e.g. F:FESX for the
-        EURO STOXX 50 Future, or F2:ES for the E-mini S&P 500 Index Futures).
+    input_symbol: str
+        A security symbol, consisting at a minimum of the root symbol of the security,
+        prefixed by the type and an optional session indicator. Currently, the following
+        security types are supported: Equities, Fixed Income, Forwards (this type
+        supports the use of wildcards), Futures (only simple futures, not continuous ones;
+        this type supports the use of wildcards), Indices, and Options (this type supports
+        the usage of wildcards).
 
     Returns
     -------
     str
-        The regular expression with embedded the stable part of the instrument symbol.
+        The regular expression pattern appropriate to the type of security and the
+        specification of the input symbol (presence of wildcards or match of a precise
+        contract).
     """
-    # return rf"{instrument_symbol}\\[A-Z][0-9]{{2}}"
 
     if input_symbol.startswith('B'):
         return create_fixed_income_regex(input_symbol)
