@@ -436,8 +436,6 @@ class TestCombineMultipleRegexes:
         assert generated_combination_of_regexes.pattern == expected_combination_of_regexes
         # Cleanup - none
 
-##########################################################################################
-
 
 class TestRetrieveSourceSymbolPairs:
     def test_retrieval_of_source_name_pairs(self):
@@ -571,23 +569,62 @@ class TestRetrieveSourceSymbolPairs:
 
 
 class TestProcessCorerefFile:
-    def test_discovery_of_contract_symbols(self, get_source_symbols_dict):
+    def test_discovery_of_contract_symbols_with_specific_contracts(self, get_source_symbols_dict):
         # Setup
         file_to_process = pathlib.Path(__file__).resolve().parent.joinpath(
                 'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
                 'COREREF_673_20201016.txt.bz2'
                 )
-        dictionary_of_symbols = get_source_symbols_dict
+        dictionary_of_symbols = {"673": ["F2:ES\\H21", "F2:ES\\Z20", "F2:NQ\\H21", "F2:NQ\\Z20"]}
         # Exercise
         discovered_contract_symbols = wcg.process_coreref_file(
             file_to_process, dictionary_of_symbols
         )
         # Verify
         expected_symbols = [
-            ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'),
-            ('673', 'F2:ES\\Z20'), ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'),
-            ('673', 'F2:NQ\\M21'), ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'),
-            ('673', 'F2:NQ\\Z21')
+            ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\Z20'),
+            ('673', 'F2:NQ\\H21'), ('673', 'F2:NQ\\Z20'),
+        ]
+        assert discovered_contract_symbols == expected_symbols
+        # Cleanup - none
+
+    def test_discovery_of_contract_symbols_with_wildcards(self, get_source_symbols_dict):
+        # Setup
+        file_to_process = pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
+                'COREREF_673_20201016.txt.bz2'
+                )
+        dictionary_of_symbols = {"673": ["F2:ES*", "F2:NQ*"]}
+        # Exercise
+        discovered_contract_symbols = wcg.process_coreref_file(
+            file_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+             ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'),
+             ('673', 'F2:ES\\Z20'), ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'),
+             ('673', 'F2:NQ\\M21'), ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'),
+             ('673', 'F2:NQ\\Z21')
+        ]
+        assert discovered_contract_symbols == expected_symbols
+        # Cleanup - none
+
+    def test_discovery_of_contract_symbols_with_mix_of_contracts_and_wildcards(self):
+        # Setup
+        file_to_process = pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
+                'COREREF_673_20201016.txt.bz2'
+                )
+        dictionary_of_symbols = {"673": ["F2:ES\\H21", "F2:ES\\Z20", "F2:NQ*"]}
+        # Exercise
+        discovered_contract_symbols = wcg.process_coreref_file(
+            file_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+             ('673', 'F2:ES\\H21'), ('673', 'F2:ES\\Z20'), ('673', 'F2:NQ\\H21'),
+             ('673', 'F2:NQ\\M21'), ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'),
+             ('673', 'F2:NQ\\Z21')
         ]
         assert discovered_contract_symbols == expected_symbols
         # Cleanup - none
