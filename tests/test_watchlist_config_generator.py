@@ -404,20 +404,35 @@ class TestCreateInstrumentLevelPattern:
         generated_instrument_regexes = wcg.create_instrument_level_pattern(instrument_names)
         # Verify
         expected_instrument_regexes = (
-            r'(F:FBTP\\[A-Z][0-9]{2,4}|F:FDAX\\M21|F:FESX\\[A-Z][0-9]{2,4 })'
+            r'(F:FBTP\\[A-Z][0-9]{2,4}|F:FDAX\\M21|F:FESX\\[A-Z][0-9]{2,4})'
         )
         assert generated_instrument_regexes == expected_instrument_regexes
+        # Cleanup - none
+
+
+class TestCreateDCMessageLevelPattern:
+    def test_creation_of_dc_message_level_pattern(self):
+        # Setup
+        source_id = "207"
+        instrument_names = ['F:FBTP*', 'F:FDAX\\M21', 'F:FESX*']
+        # Exercise
+        generated_regex = wcg.create_dc_message_level_pattern(source_id, instrument_names)
+        # Verify
+        expected_dc_level_regex = (
+            r"^DC\|207\|(F:FBTP\\[A-Z][0-9]{2,4}|F:FDAX\\M21|F:FESX\\[A-Z][0-9]{2,4})"
+        )
+        assert generated_regex == expected_dc_level_regex
         # Cleanup - none
 
 
 class TestCombineMultipleRegexes:
     def test_combination_of_regexes(self):
         # Setup
-        regexes = [r'F2:ES\\[A-Z][0-9]{2}', r'F2:NQ\\[A-Z][0-9]{2}']
+        regexes = [r'F2:ES\\[A-Z][0-9]{2,4}', r'F2:NQ\\[A-Z][0-9]{2,4}']
         # Exercise
         generated_combination_of_regexes = wcg.combine_multiple_regexes(regexes)
         # Verify
-        expected_combination_of_regexes = "F2:ES\\\\[A-Z][0-9]{2}|F2:NQ\\\\[A-Z][0-9]{2}"
+        expected_combination_of_regexes = "F2:ES\\\\[A-Z][0-9]{2,4}|F2:NQ\\\\[A-Z][0-9]{2,4}"
         assert generated_combination_of_regexes.pattern == expected_combination_of_regexes
         # Cleanup - none
 
