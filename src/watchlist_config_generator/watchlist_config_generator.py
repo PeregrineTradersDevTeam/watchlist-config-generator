@@ -182,7 +182,7 @@ def create_equity_regex(instrument_symbol: str) -> str:
         The regular expression pattern that includes the root symbol prefixed with the type
         identifier as well as the optional components (currency code and sub-market).
     """
-    return rf"{instrument_symbol}-{{0,1}}[A-Z]{{0,3}}@{{0,1}}[a-zA-Z0-9]{{0,10}}"
+    return rf"\b{instrument_symbol}\b-{{0,1}}[A-Z]{{0,3}}@{{0,1}}[a-zA-Z0-9]{{0,10}}"
 
 
 def create_futures_regex(input_symbol: str) -> str:
@@ -330,7 +330,7 @@ def create_fixed_income_regex(input_symbol: str) -> str:
         The regular expression pattern that matches the input symbol as well as all the
         optional components.
     """
-    return rf"{input_symbol}\\{{0,1}}D{{0,1}}@{{0,1}}[a-zA-Z0-9]{{1,10}}"
+    return rf"\b{input_symbol}\b\\{{0,1}}D{{0,1}}@{{0,1}}[a-zA-Z0-9]{{1,10}}"
 
 
 def create_forwards_regex(input_symbol: str) -> str:
@@ -396,10 +396,7 @@ def create_index_regex(input_symbol: str) -> str:
     str
         The regular expression pattern that matches the index symbol passed as an input.
     """
-    return rf"{input_symbol}"
-
-
-##########################################################################################
+    return rf"\b{input_symbol}\b"
 
 
 def create_specific_instrument_regex(input_symbol: str) -> str:
