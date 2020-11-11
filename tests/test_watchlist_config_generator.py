@@ -397,15 +397,14 @@ class TestCreateSpecificInstrumentRegex:
 
 
 class TestCreateInstrumentLevelPattern:
-    @pytest.mark.skip()
     def test_creation_of_instrument_level_regex(self):
         # Setup
-        instrument_names = ['F:FBTP', 'F:FDAX', 'F:FESX']
+        instrument_names = ['F:FBTP*', 'F:FDAX\\M21', 'F:FESX*']
         # Exercise
         generated_instrument_regexes = wcg.create_instrument_level_pattern(instrument_names)
         # Verify
         expected_instrument_regexes = (
-            r'(F:FBTP\\[A-Z][0-9]{2}|F:FDAX\\[A-Z][0-9]{2}|F:FESX\\[A-Z][0-9]{2})'
+            r'(F:FBTP\\[A-Z][0-9]{2,4}|F:FDAX\\M21|F:FESX\\[A-Z][0-9]{2,4 })'
         )
         assert generated_instrument_regexes == expected_instrument_regexes
         # Cleanup - none
