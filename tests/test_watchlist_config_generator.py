@@ -373,15 +373,26 @@ class TestCreateIndexRegex:
 
 
 class TestCreateSpecificInstrumentRegex:
-    @pytest.mark.skip()
-    def test_creation_of_instrument_specific_regex(self):
-        # Setup
-        instrument_name = "F:FBTP"
+    @pytest.mark.parametrize(
+        "input_symbol, expected_regex_pattern", [
+            ("B:01NU", r"B:01NU\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"),
+            ("E:VOD", r"E:VOD-{0,1}[A-Z]{0,3}@{0,1}[a-zA-Z0-9]{0,10}"),
+            ("F:FBTP\\M21", r"F:FBTP\\M21"),
+            ("F:FBTP*", r"F:FBTP\\[A-Z][0-9]{2,4}"),
+            ("I:KOSPI200", r"I:KOSPI200"),
+            ("O:PRY\\A21\\25.0", r"O:PRY\\A21\\25.0"),
+            ("O:PRY**", r"O:PRY\\[A-Z][0-9]{2,4}\\[0-9.]{1,10}"),
+            ("O:PRY\\A21*", r"O:PRY\\A21\\[0-9.]{1,10}"),
+            ("R2:GAS\\5D", r"R2:GAS\\5D"),
+            ("R2:GAS*", r"R2:GAS\\[A-Z0-9]{2}"),
+        ],
+    )
+    def test_creation_of_instrument_specific_regex(self, input_symbol, expected_regex_pattern):
+        # Setup - none
         # Exercise
-        generated_regexes = wcg.create_specific_instrument_regex(instrument_name)
+        generated_regex = wcg.create_specific_instrument_regex(input_symbol)
         # Verify
-        correct_regex = r"F:FBTP\\[A-Z][0-9]{2}"
-        assert generated_regexes == correct_regex
+        assert generated_regex == expected_regex_pattern
         # Cleanup - none
 
 
