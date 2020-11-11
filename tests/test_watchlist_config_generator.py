@@ -436,6 +436,8 @@ class TestCombineMultipleRegexes:
         assert generated_combination_of_regexes.pattern == expected_combination_of_regexes
         # Cleanup - none
 
+##########################################################################################
+
 
 class TestRetrieveSourceSymbolPairs:
     def test_retrieval_of_source_name_pairs(self):
@@ -445,12 +447,12 @@ class TestRetrieveSourceSymbolPairs:
             "2020" / "10" / "16" / "S207" / "CORE" / "COREREF_207_20201016.txt.bz2"
         )
         instrument_level_regex = (
-            r"(F:FDAX\\[A-Z][0-9]{2}|F:FESX\\[A-Z][0-9]{2}|F:FBTP\\[A-Z][0-9]{2}|"
-            r"F:FBTS\\[A-Z][0-9]{2})"
+            r"(F:FDAX\\[A-Z][0-9]{2,4}|F:FESX\\[A-Z][0-9]{2,4}|F:FBTP\\[A-Z][0-9]{2,4}|"
+            r"F:FBTS\\[A-Z][0-9]{2,4})"
         )
         message_level_regex = (
-            r"^DC\|207\|(F:FDAX\\[A-Z][0-9]{2}|F:FESX\\[A-Z][0-9]{2}|F:FBTP\\[A-Z][0-9]{2}|"
-            r"F:FBTS\\[A-Z][0-9]{2})"
+            r"^DC\|207\|(F:FDAX\\[A-Z][0-9]{2,4}|F:FESX\\[A-Z][0-9]{2}|F:FBTP\\[A-Z][0-9]{2,4}|"
+            r"F:FBTS\\[A-Z][0-9]{2,4})"
         )
         # Exercise
         retrieved_source_name_pairs = wcg.retrieve_source_symbol_pairs(
@@ -468,13 +470,75 @@ class TestRetrieveSourceSymbolPairs:
         assert retrieved_source_name_pairs == expected_source_name_pairs
         # Cleanup - none
 
+    def test_retrieval_of_source_name_pairs_with_selected_contracts_only(self):
+        # Setup
+        path_to_reference_data_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" / "mock_data_dir" /
+            "2020" / "10" / "16" / "S207" / "CORE" / "COREREF_207_20201016.txt.bz2"
+        )
+        instrument_level_regex = r"(F:FDAX\\Z20|F:FESX\\H22|F:FBTP\\H21|F:FBTS\\M21)"
+
+        message_level_regex = r"^DC\|207\|(F:FDAX\\Z20|F:FESX\\H22|F:FBTP\\H21|F:FBTS\\M21)"
+
+        # Exercise
+        retrieved_source_name_pairs = wcg.retrieve_source_symbol_pairs(
+            path_to_reference_data_file, message_level_regex, instrument_level_regex
+        )
+        # Verify
+        expected_source_name_pairs = [
+            ('207', 'F:FBTP\\H21'), ('207', 'F:FBTS\\M21'), ('207', 'F:FDAX\\Z20'),
+            ('207', 'F:FESX\\H22'),
+        ]
+        assert retrieved_source_name_pairs == expected_source_name_pairs
+        # Cleanup - none
+
+    def test_retrieval_of_source_name_pairs_when_one_contract_are_not_in_file(self):
+        # Setup
+        path_to_reference_data_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" / "mock_data_dir" /
+            "2020" / "10" / "16" / "S207" / "CORE" / "COREREF_207_20201016.txt.bz2"
+        )
+        instrument_level_regex = r"(F:FDAX\\Z21|F:FESX\\H22|F:FBTP\\H21|F:FBTS\\M21)"
+
+        message_level_regex = r"^DC\|207\|(F:FDAX\\Z21|F:FESX\\H22|F:FBTP\\H21|F:FBTS\\M21)"
+
+        # Exercise
+        retrieved_source_name_pairs = wcg.retrieve_source_symbol_pairs(
+            path_to_reference_data_file, message_level_regex, instrument_level_regex
+        )
+        # Verify
+        expected_source_name_pairs = [
+            ('207', 'F:FBTP\\H21'), ('207', 'F:FBTS\\M21'), ('207', 'F:FESX\\H22'),
+        ]
+        assert retrieved_source_name_pairs == expected_source_name_pairs
+        # Cleanup - none
+
+    def test_retrieval_of_source_name_pairs_when_all_contracts_are_not_in_file(self):
+        # Setup
+        path_to_reference_data_file = (
+            pathlib.Path(__file__).resolve().parent / "static_data" / "mock_data_dir" /
+            "2020" / "10" / "16" / "S207" / "CORE" / "COREREF_207_20201016.txt.bz2"
+        )
+        instrument_level_regex = r"(F:FDAX\\Z21|F:FESX\\H22|F:FBTP\\H21|F:FBTS\\M21)"
+
+        message_level_regex = r"^DC\|207\|(F:FDAX\\Z21|F:FESX\\Z22|F:FBTP\\H22|F:FBTS\\M22)"
+
+        # Exercise
+        retrieved_source_name_pairs = wcg.retrieve_source_symbol_pairs(
+            path_to_reference_data_file, message_level_regex, instrument_level_regex
+        )
+        # Verify
+        expected_source_name_pairs = []
+        assert retrieved_source_name_pairs == expected_source_name_pairs
+        # Cleanup - none
+
     def test_system_exit(self):
         # Setup
         path_to_coreref_file = pathlib.Path(__file__).resolve().parent.joinpath(
             'static_data', 'COREREF_673_20201016.txt',
         )
-        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
-        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2,4}|F2:NQ\\[A-Z][0-9]{2,4})"
+        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2,4}|F2:NQ\\[A-Z][0-9]{2,4})"
         # Exercise
         with pytest.raises(SystemExit) as system_exit:
             wcg.retrieve_source_symbol_pairs(
@@ -489,8 +553,8 @@ class TestRetrieveSourceSymbolPairs:
         path_to_coreref_file = pathlib.Path(__file__).resolve().parent.joinpath(
             'static_data', 'COREREF_673_20201016.txt',
         )
-        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
-        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
+        message_level_pattern = r"^DC\|673\|(F2:ES\\[A-Z][0-9]{2,4}|F2:NQ\\[A-Z][0-9]{2,4})"
+        instrument_level_pattern = r"(F2:ES\\[A-Z][0-9]{2,4}|F2:NQ\\[A-Z][0-9]{2,4})"
         # Exercise
         with pytest.raises(SystemExit) as system_exit:
             wcg.retrieve_source_symbol_pairs(
