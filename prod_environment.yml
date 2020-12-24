@@ -1,0 +1,41 @@
+name: watchlist-config-generator-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - atomicwrites=1.4.0=pyh9f0ad1d_0
+  - attrs=20.2.0=pyh9f0ad1d_0
+  - ca-certificates=2020.6.20=hecda079_0
+  - certifi=2020.6.20=py38h9bdc248_2
+  - colorama=0.4.4=pyh9f0ad1d_0
+  - coverage=5.3=py38h1e8a9f7_1
+  - iniconfig=1.1.0=pyh9f0ad1d_0
+  - isort=5.6.4=py_0
+  - more-itertools=8.5.0=py_0
+  - mypy=0.790=py_0
+  - mypy_extensions=0.4.3=py38h32f6830_2
+  - openssl=1.1.1h=he774522_0
+  - packaging=20.4=pyh9f0ad1d_0
+  - pip=20.2.4=py_0
+  - pluggy=0.13.1=py38h32f6830_3
+  - psutil=5.7.2=py38hab1e662_1
+  - py=1.9.0=pyh9f0ad1d_0
+  - pyparsing=2.4.7=pyh9f0ad1d_0
+  - pytest=6.1.1=py38h32f6830_1
+  - pytest-cov=2.10.1=pyh9f0ad1d_0
+  - pytest-mock=3.3.1=py_0
+  - python=3.8.6=h60c2a47_0_cpython
+  - python_abi=3.8=1_cp38
+  - setuptools=49.6.0=py38h9bdc248_2
+  - six=1.15.0=pyh9f0ad1d_0
+  - sqlite=3.33.0=he774522_1
+  - toml=0.10.1=pyh9f0ad1d_0
+  - typed-ast=1.4.1=py38hfa6e2cd_0
+  - typing_extensions=3.7.4.3=py_0
+  - vc=14.1=h869be7e_1
+  - vs2015_runtime=14.16.27012=h30e32a0_2
+  - wheel=0.35.1=pyh9f0ad1d_0
+  - wincertstore=0.2=py38h32f6830_1005
+  - pip:
+    - click==7.1.2
+prefix: C:\Users\Jacopo\Miniconda3\envs\watchlist-config-generator-env
