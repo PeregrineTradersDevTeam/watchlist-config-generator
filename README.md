@@ -79,7 +79,7 @@ Since the Watchlist Configuration File Generator uses the COREREF files that com
 To use the Watchlist Configuration File Generator, first clone the repository on your device using the command below:
 
 ```shell
-git clone <insert-here-the-link-to-git> watchlist-config-generator
+git clone https://github.com/PeregrineTradersDevTeam/watchlist-config-generator.git watchlist-config-generator
 cd watchlist-config-generator
 ```
 
