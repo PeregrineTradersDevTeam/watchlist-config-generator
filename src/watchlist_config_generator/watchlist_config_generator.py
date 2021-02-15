@@ -197,14 +197,14 @@ def create_futures_regex(input_symbol: str) -> str:
     only for those futures where the day of the month is required to identify the security).
 
     The function logic allows the user to pass a complete futures name, or to pass the
-    root symbol prefixed by the type and optional session indicator, followed by a *
-    wildcard flag. In the former case, the resulting regex expression will be such that
-    it will match only the specific security that is passed as an input (for example, by
-    passing F:FDAX\\H21, the resulting regular expression will only match the DAX futures
-    contract with expiration in March 2021). If only the symbol root (with all the
-    necessary prefixes) followed by the * wildcard flag, is passed as an input, the
-    resulting regex will be such to allow matching all the possible combinations of month
-    year (and optionally day) of expiration.
+    root symbol prefixed by the type and optional session indicator, followed by a
+    backslash and the * wildcard flag. In the former case, the resulting regex expression
+    will be such that it will match only the specific security that is passed as an input
+    (for example, by passing F:FDAX\\H21, the resulting regular expression will only
+    match the DAX futures contract with expiration in March 2021). If only the symbol
+    root (with all the necessary prefixes) followed by a backslash and the * wildcard
+    flag, is passed as an input, the resulting regex will be such to allow matching all
+    the possible combinations of month year (and optionally day) of expiration.
 
     Parameters
     ----------
@@ -213,14 +213,15 @@ def create_futures_regex(input_symbol: str) -> str:
         identifier (F) and optional session indicator. If the user wants the function to
         produce a regular expression that can match all the possible combinations of
         month, year (and optionally day) expirations, then the root symbol will be followed
-        by the * wildcard flag (for example F:FDAX* will result in a regular expression
-        that will match all the possible combinations of root symbol, month code, year and
-        eventually day codes). Alternatively, if the user is only interested in creating
-        a regular expression that matches literally only a specific contract, the passed
-        instrument symbol (prefixed with the type identifier and optional session indicator)
-        will be followed by a backslash and a specific maturity, identified by the month
-        code followed by the 2-digit year code and the 2-digit day code for those contracts
-        that are identified also by the day of the month.
+        by a backslash and the * wildcard flag (for example F:FDAX\\* will result in a
+        regular expression that will match all the possible combinations of root symbol,
+        month code, year and eventually day codes). Alternatively, if the user is only
+        interested in creating a regular expression that matches literally only a
+        specific contract, the passed instrument symbol (prefixed with the type
+        identifier and optional session indicator) will be followed by a backslash and a
+        specific maturity, identified by the month code followed by the 2-digit year code
+        and the 2-digit day code for those contracts that are identified also by the day
+        of the month.
 
     Returns
     -------
@@ -232,7 +233,9 @@ def create_futures_regex(input_symbol: str) -> str:
     if not input_symbol.endswith('*'):
         symbol_components = input_symbol.split("\\")
         return rf"{symbol_components[0]}\\{symbol_components[1]}"
-    return rf"{input_symbol.rstrip('*')}\\[A-Z][0-9]{{2,4}}"
+    else:
+        symbol_root = input_symbol.split("\\")[0]
+    return rf"{symbol_root}\\[A-Z][0-9]{{2,4}}"
 
 
 def create_options_regex(input_symbol: str) -> str:
@@ -251,23 +254,24 @@ def create_options_regex(input_symbol: str) -> str:
     The function logic allows the user to pass a complete option symbol or to use wildcards
     to specify the type of matching that the generated regular expression should support.
     In particular, if the user passes to the function the root symbol (prefixed by the
-    type and the optional session indicator) followed by the ** wildcard flag, the function
-    will generate a regular expression that will match all the possible combinations of
-    expiration dates and all the possible strike prices, of the root symbol (for example,
-    passing O:PRY** to the function, will result in a regular expression that will match
-    all the possible combinations of maturity and strike price for the Prysmian Group
-    option). Alternatively, if the user wants the regular expression to match all the
-    possible strike prices given a certain root symbol and expiration, it can pass to the
-    function the root symbol (prefixed by the type and the optional session indicator); a
-    backslash, the chosen maturity, followed by the ** wildcard flag (for example,
-    passing O:PRY\\A21* to the function, will result in a regular expression that will
-    match all the possible combination of strike price for the Prysmian Group call option
-    with January 2021 maturity). Finally, if a complete option symbol is passed to the
-    function, without any of the previously shown wildcard flags, the resulting regex
-    expression will be such that it will match only the specific contract that is passed
-    as an input (for example, passing O:PRY\\A21\\17.0 to the function, will result in a
-    regular expression that will match explicitly only the Prysmian Group call option
-    with January 2021 maturity and strike price of 17.0 euro).
+    type and the optional session indicator) followed by a backslash and the * wildcard
+    flag, the function will generate a regular expression that will match all the
+    possible combinations of expiration dates and all the possible strike prices, of the
+    root symbol (for example, passing O:PRY\\* to the function, will result in a regular
+    expression that will match all the possible combinations of maturity and strike price
+    for the Prysmian Group option). Alternatively, if the user wants the regular
+    expression to match all the possible strike prices given a certain root symbol and
+    delivery date, it can pass to the function the root symbol (prefixed by the type and
+    the optional session indicator); a backslash, the chosen maturity, another backslash,
+    followed by the * wildcard flag (for example, passing O:PRY\\A21\\* to the function,
+    will result in a regular expression that will match all the possible combination of
+    strike price for the Prysmian Group call option with January 2021 maturity). Finally,
+    if a complete option symbol is passed to the function, without any of the previously
+    shown wildcard patterns, the resulting regex expression will be such that it will
+    match only the specific contract that is passed as an input (for example, passing
+    O:PRY\\A21\\17.0 to the function, will result in a regular expression that will match
+    explicitly only the Prysmian Group call option with January 2021 maturity and strike
+    price of 17.0 euro).
 
     Parameters
     ----------
@@ -275,13 +279,14 @@ def create_options_regex(input_symbol: str) -> str:
         An option symbol consisting of the root symbol prefixed with the type
         identifier (O) and optional session indicator. If the user wants the function to
         produce a regular expression that can match all the possible combinations of
-        expiration date and strike price, the root symbol will be followed by the **
-        wildcard flag (e.g. O:PRY**). Alternatively, if the user wants a regular
-        expression that can match all the possible strike prices for a certain expiration,
-        the root symbol will be followed by a backslash, the expiration date and the *
-        wildcard flag (e.g. O:PRY\\A21*). Finally, if the regular expression has to match
-        a specific maturity and strike price, the user can pass the complete symbol for
-        the specific contract, without any wildcard (e.g. O:PRY\\A21\\17.0).
+        expiration date and strike price, the root symbol will be followed by a backslash
+        and the * wildcard flag (e.g. O:PRY\\*). Alternatively, if the user wants a
+        regular expression that can match all the possible strike prices for a certain
+        expiration, the root symbol will be followed by a backslash, the expiration date,
+        another backslash, followed by the * wildcard flag (e.g. O:PRY\\A21\\*). Finally,
+        if the regular expression has to match a specific maturity and strike price, the
+        user can pass the complete symbol for the specific contract, without any wildcard
+        (e.g. O:PRY\\A21\\17.0).
 
     Returns
     -------
@@ -296,11 +301,12 @@ def create_options_regex(input_symbol: str) -> str:
         symbol_components = input_symbol.split("\\")
         return rf"{symbol_components[0]}\\{symbol_components[1]}\\{symbol_components[2]}"
     else:
-        if input_symbol[-2:] == "**":
-            return rf"{input_symbol.rstrip('**')}\\[A-Z][0-9]{{2,4}}\\[0-9.]{{1,10}}"
-        elif input_symbol.endswith('*') and input_symbol[-2:] != "**":
+        if len(input_symbol.split('\\')) == 2:
+            symbol_components = input_symbol.split('\\')
+            return rf"{symbol_components[0]}\\[A-Z][0-9]{{2,4}}\\[0-9.]{{1,10}}"
+        elif len(input_symbol.split('\\')) == 3:
             symbol_components = input_symbol.split("\\")
-            return rf"{symbol_components[0]}\\{symbol_components[1].rstrip('*')}\\[0-9.]{{1,10}}"
+            return rf"{symbol_components[0]}\\{symbol_components[1]}\\[0-9.]{{1,10}}"
 
 
 def create_fixed_income_regex(input_symbol: str) -> str:
@@ -350,11 +356,11 @@ def create_forwards_regex(input_symbol: str) -> str:
     contract (for example, passing R2:GAS\\5D as an input, will result in the function
     creating a regular expression matching only the forward contract for GAS traded after
     hours with 5-day delivery). Conversely, if it is passed as an input only the root
-    symbol (prefixed with the type and optional session indicator) followed by the *
-    wildcard flag, the function will generate a regular expression that can match all the
-    possible relative terms (for example, passing R2:GAS*, will produce a regular
-    expression that can match all the available relative delivery dates of the GAS
-    forward).
+    symbol (prefixed with the type and optional session indicator) followed by a
+    backslash and the * wildcard flag, the function will generate a regular expression
+    that can match all the possible relative terms (for example, passing R2:GAS*, will
+    produce a regular expression that can match all the available relative delivery dates
+    of the GAS forward).
 
     Parameters
     ----------
@@ -362,7 +368,7 @@ def create_forwards_regex(input_symbol: str) -> str:
         Either a forward symbol consisting of the root symbol prefixed with the type
         identifier (R) and the optional session indicator, followed by a backslash and
         the chosen relative delivery term, or the root symbol (with all the necessary
-        prefixes) followed by the * wildcard flag.
+        prefixes) followed by a backslash and the * wildcard flag.
 
     Returns
     -------
@@ -376,7 +382,8 @@ def create_forwards_regex(input_symbol: str) -> str:
         symbol_components = input_symbol.split("\\")
         return rf"{symbol_components[0]}\\{symbol_components[1]}"
     else:
-        return rf"{input_symbol.rstrip('*')}\\[A-Z0-9]{{2}}"
+        symbol_root = input_symbol.split("\\")[0]
+        return rf"{symbol_root}\\[A-Z0-9]{{2,4}}"
 
 
 def create_index_regex(input_symbol: str) -> str:

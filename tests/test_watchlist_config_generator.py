@@ -34,7 +34,10 @@ class TestSearchFiles:
 
     def test_search_of_txt_bz2_files_in_all_subdirectories(self):
         # Setup
-        data_dir = pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir'
+        data_dir = (
+            pathlib.Path(__file__).resolve().parent / 'static_data' / 'mock_data_dir' /
+            '2020' / '10'
+        )
         pattern = "**/*.txt.bz2"
         # Exercise
         discovered_reference_data_files = wcg.search_files(data_dir, pattern)
@@ -147,6 +150,16 @@ class TestFindAllCorerefFiles:
                 'static_data',
                 'mock_data_dir',
                 '2020',
+                '03',
+                '16',
+                'S794',
+                'CORE',
+                'COREREF_794_20200316.txt.bz2',
+            ),
+            pathlib.Path(__file__).parent.joinpath(
+                'static_data',
+                'mock_data_dir',
+                '2020',
                 '10',
                 '16',
                 'S207',
@@ -188,6 +201,29 @@ class TestJsonLoader:
         extrapolated_source_instrument_view = wcg.json_loader(path_to_instruments_file)
         # Verify
         expected_source_instrument_view = get_source_symbols_dict
+        assert extrapolated_source_instrument_view == expected_source_instrument_view
+        # Cleanup - none
+
+    def test_extrapolation_of_instrument_view_from_complex_input_file(self):
+        # Setup
+        path_to_instruments_file = (
+            pathlib.Path(__file__).resolve().parent / 'static_data' / 'complex_input_file.json'
+        )
+        # Exercise
+        extrapolated_source_instrument_view = wcg.json_loader(path_to_instruments_file)
+        # Verify
+        expected_source_instrument_view = {
+            "207": [
+                "F:FDAX\\H21", "F:FDAX\\Z20", "F:FESX\\H21",
+                "F:FESX\\Z20", "O:VOW\\A21*", "O:DAI**"
+            ],
+            "673": [
+                "F2:ES*", "F2:NQ*"
+            ],
+            "794": [
+                "E:ADA", "E:BNPP", "E:PHIAA", "E:RDSAA"
+            ],
+        }
         assert extrapolated_source_instrument_view == expected_source_instrument_view
         # Cleanup - none
 
@@ -241,25 +277,6 @@ class TestRetrieveInstruments:
         # Cleanup - none
 
 
-class TestCreateDcMessageLevelPattern:
-    @pytest.mark.skip()
-    def test_creation_of_message_level_pattern(self):
-        # Setup
-        instrument_symbols = ["F2:ES", "F2:NQ"]
-        source_code = '684'
-        # Exercise
-        generated_message_level_regexes = wcg.create_dc_message_level_pattern(
-            source_code,
-            instrument_symbols,
-        )
-        # Verify
-        expected_message_level_regexes = (
-            r"^DC\|684\|(F2:ES\\[A-Z][0-9]{2}|F2:NQ\\[A-Z][0-9]{2})"
-        )
-        assert generated_message_level_regexes == expected_message_level_regexes
-        # Cleanup - none
-
-
 class TestCreateEquityRegex:
     def test_creation_of_equity_regex(self):
         # Setup
@@ -267,7 +284,7 @@ class TestCreateEquityRegex:
         # Exercise
         generated_regex = wcg.create_equity_regex(instrument_name)
         # Verify
-        correct_regex = r"E:VOD-{0,1}[A-Z]{0,3}@{0,1}[a-zA-Z0-9]{0,10}"
+        correct_regex = r"\bE:VOD\b-{0,1}[A-Z]{0,3}@{0,1}[a-zA-Z0-9]{0,10}"
         assert generated_regex == correct_regex
         # Cleanup - none
 
@@ -285,7 +302,7 @@ class TestCreateFuturesRegex:
 
     def test_creation_of_futures_regex_with_wildcard(self):
         # Setup
-        instrument_symbol_input = "F:FBTP*"
+        instrument_symbol_input = "F:FBTP\\*"
         # Exercise
         generated_regex = wcg.create_futures_regex(instrument_symbol_input)
         # Verify
@@ -305,9 +322,9 @@ class TestCreateOptionsRegex:
         assert generated_regex == expected_regex
         # Cleanup - none
 
-    def test_creation_of_option_regex_with_double_wildcard(self):
+    def test_creation_of_option_regex_with_maturity_wildcard(self):
         # Setup
-        instrument_symbol_input = "O:PRY**"
+        instrument_symbol_input = "O:PRY\\*"
         # Exercise
         generated_regex = wcg.create_options_regex(instrument_symbol_input)
         # Verify
@@ -315,9 +332,9 @@ class TestCreateOptionsRegex:
         assert generated_regex == expected_regex
         # Cleanup - none
 
-    def test_creation_of_option_regex_with_single_wildcard(self):
+    def test_creation_of_option_regex_with_strike_wildcard(self):
         # Setup
-        instrument_symbol_input = "O:PRY\\A21*"
+        instrument_symbol_input = "O:PRY\\A21\\*"
         # Exercise
         generated_regex = wcg.create_options_regex(instrument_symbol_input)
         # Verify
@@ -333,7 +350,7 @@ class TestCreateFixedIncomeRegex:
         # Exercise
         generated_regex = wcg.create_fixed_income_regex(instrument_symbol_input)
         # Verify
-        expected_regex = r"B:01NU\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"
+        expected_regex = r"\bB:01NU\b\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"
         assert generated_regex == expected_regex
         # Cleanup - none
 
@@ -351,11 +368,11 @@ class TestCreateForwardsRegex:
 
     def test_creation_of_forwards_regex_with_wildcard(self):
         # Setup
-        instrument_symbol_input = "R2:GAS*"
+        instrument_symbol_input = "R2:GAS\\*"
         # Exercise
         generated_regex = wcg.create_forwards_regex(instrument_symbol_input)
         # Verify
-        expected_regex = r"R2:GAS\\[A-Z0-9]{2}"
+        expected_regex = r"R2:GAS\\[A-Z0-9]{2,4}"
         assert generated_regex == expected_regex
         # Cleanup - none
 
@@ -367,7 +384,7 @@ class TestCreateIndexRegex:
         # Exercise
         generated_regex = wcg.create_index_regex(instrument_symbol_input)
         # Verify
-        expected_regex = r"I:KOSPI200"
+        expected_regex = r"\bI:KOSPI200\b"
         assert generated_regex == expected_regex
         # Cleanup - none
 
@@ -375,16 +392,16 @@ class TestCreateIndexRegex:
 class TestCreateSpecificInstrumentRegex:
     @pytest.mark.parametrize(
         "input_symbol, expected_regex_pattern", [
-            ("B:01NU", r"B:01NU\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"),
-            ("E:VOD", r"E:VOD-{0,1}[A-Z]{0,3}@{0,1}[a-zA-Z0-9]{0,10}"),
+            ("B:01NU", r"\bB:01NU\b\\{0,1}D{0,1}@{0,1}[a-zA-Z0-9]{1,10}"),
+            ("E:VOD", r"\bE:VOD\b-{0,1}[A-Z]{0,3}@{0,1}[a-zA-Z0-9]{0,10}"),
             ("F:FBTP\\M21", r"F:FBTP\\M21"),
-            ("F:FBTP*", r"F:FBTP\\[A-Z][0-9]{2,4}"),
-            ("I:KOSPI200", r"I:KOSPI200"),
+            ("F:FBTP\\*", r"F:FBTP\\[A-Z][0-9]{2,4}"),
+            ("I:KOSPI200", r"\bI:KOSPI200\b"),
             ("O:PRY\\A21\\25.0", r"O:PRY\\A21\\25.0"),
-            ("O:PRY**", r"O:PRY\\[A-Z][0-9]{2,4}\\[0-9.]{1,10}"),
-            ("O:PRY\\A21*", r"O:PRY\\A21\\[0-9.]{1,10}"),
+            ("O:PRY\\*", r"O:PRY\\[A-Z][0-9]{2,4}\\[0-9.]{1,10}"),
+            ("O:PRY\\A21\\*", r"O:PRY\\A21\\[0-9.]{1,10}"),
             ("R2:GAS\\5D", r"R2:GAS\\5D"),
-            ("R2:GAS*", r"R2:GAS\\[A-Z0-9]{2}"),
+            ("R2:GAS\\*", r"R2:GAS\\[A-Z0-9]{2,4}"),
         ],
     )
     def test_creation_of_instrument_specific_regex(self, input_symbol, expected_regex_pattern):
@@ -399,7 +416,7 @@ class TestCreateSpecificInstrumentRegex:
 class TestCreateInstrumentLevelPattern:
     def test_creation_of_instrument_level_regex(self):
         # Setup
-        instrument_names = ['F:FBTP*', 'F:FDAX\\M21', 'F:FESX*']
+        instrument_names = ['F:FBTP\\*', 'F:FDAX\\M21', 'F:FESX\\*']
         # Exercise
         generated_instrument_regexes = wcg.create_instrument_level_pattern(instrument_names)
         # Verify
@@ -414,7 +431,7 @@ class TestCreateDCMessageLevelPattern:
     def test_creation_of_dc_message_level_pattern(self):
         # Setup
         source_id = "207"
-        instrument_names = ['F:FBTP*', 'F:FDAX\\M21', 'F:FESX*']
+        instrument_names = ['F:FBTP\\*', 'F:FDAX\\M21', 'F:FESX\\*']
         # Exercise
         generated_regex = wcg.create_dc_message_level_pattern(source_id, instrument_names)
         # Verify
@@ -629,9 +646,27 @@ class TestProcessCorerefFile:
         assert discovered_contract_symbols == expected_symbols
         # Cleanup - none
 
+    def test_discovery_of_symbols_within_equity_coreref_file(self):
+        # Setup
+        file_to_process = pathlib.Path(__file__).resolve().parent.joinpath(
+            'static_data', 'mock_data_dir', '2020', '03', '16', 'S794', 'CORE',
+            'COREREF_794_20200316.txt.bz2'
+        )
+        dictionary_of_symbols = {"794": ["E:ADA", "E:BNPP", "E:PHIAA", "E:RDSAA"]}
+        # Exercise
+        discovered_contract_symbols = wcg.process_coreref_file(
+            file_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+            ('794', 'E:ADA'), ('794', 'E:BNPP'), ('794', 'E:PHIAA'), ('794', 'E:RDSAA'),
+        ]
+        assert discovered_contract_symbols == expected_symbols
+        # Cleanup - none
+
 
 class TestProcessAllCorerefFiles:
-    def test_discovery_of_all_symbols(self, get_source_symbols_dict):
+    def test_discovery_of_all_symbols(self):
         # Setup
         files_to_process = [
             pathlib.Path(__file__).resolve().parent.joinpath(
@@ -643,7 +678,10 @@ class TestProcessAllCorerefFiles:
                 'COREREF_673_20201016.txt.bz2'
                 ),
         ]
-        dictionary_of_symbols = get_source_symbols_dict
+        dictionary_of_symbols = {
+            "367": ["F2:TN*", "F2:UB*", "F2:ZB*", "F2:ZF*", "F2:ZN*", "F2:ZT*"],
+            "673": ["F2:ES*", "F2:NQ*"]
+        }
         # Exercise
         discovered_symbols = wcg.process_all_coreref_files(
             files_to_process, dictionary_of_symbols
@@ -653,6 +691,44 @@ class TestProcessAllCorerefFiles:
             ('367', 'F2:TN\\H21'), ('367', 'F2:TN\\M21'), ('367', 'F2:TN\\Z20'),
             ('367', 'F2:UB\\H21'), ('367', 'F2:UB\\M21'), ('367', 'F2:UB\\Z20'),
             ('367', 'F2:ZB\\H21'), ('367', 'F2:ZB\\M21'), ('367', 'F2:ZB\\Z20'),
+            ('367', 'F2:ZF\\H21'), ('367', 'F2:ZF\\M21'), ('367', 'F2:ZF\\U20'),
+            ('367', 'F2:ZF\\Z20'), ('367', 'F2:ZN\\H21'), ('367', 'F2:ZN\\M21'),
+            ('367', 'F2:ZN\\Z20'), ('367', 'F2:ZT\\H21'), ('367', 'F2:ZT\\M21'),
+            ('367', 'F2:ZT\\U20'), ('367', 'F2:ZT\\Z20'), ('673', 'F2:ES\\H21'),
+            ('673', 'F2:ES\\M21'), ('673', 'F2:ES\\U21'), ('673', 'F2:ES\\Z20'),
+            ('673', 'F2:ES\\Z21'), ('673', 'F2:NQ\\H21'), ('673', 'F2:NQ\\M21'),
+            ('673', 'F2:NQ\\U21'), ('673', 'F2:NQ\\Z20'), ('673', 'F2:NQ\\Z21')
+        ]
+        assert discovered_symbols == expected_symbols
+        # Cleanup - none
+
+    def test_mixed_discovery_of_symbols_and_contracts(self):
+        # Setup
+        files_to_process = [
+            pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S367', 'CORE',
+                'COREREF_367_20201016.txt.bz2'
+            ),
+            pathlib.Path(__file__).resolve().parent.joinpath(
+                'static_data', 'mock_data_dir', '2020', '10', '16', 'S673', 'CORE',
+                'COREREF_673_20201016.txt.bz2'
+                ),
+        ]
+        dictionary_of_symbols = {
+            "367": [
+                "F2:TN\\Z20", "F2:TN\\H21", "F2:UB\\Z20", "F2:UB\\H21",
+                "F2:ZB\\Z20", "F2:ZB\\H21", "F2:ZF*", "F2:ZN*", "F2:ZT*",
+            ],
+            "673": ["F2:ES*", "F2:NQ*"]
+        }
+        # Exercise
+        discovered_symbols = wcg.process_all_coreref_files(
+            files_to_process, dictionary_of_symbols
+        )
+        # Verify
+        expected_symbols = [
+            ('367', 'F2:TN\\H21'), ('367', 'F2:TN\\Z20'), ('367', 'F2:UB\\H21'),
+            ('367', 'F2:UB\\Z20'), ('367', 'F2:ZB\\H21'), ('367', 'F2:ZB\\Z20'),
             ('367', 'F2:ZF\\H21'), ('367', 'F2:ZF\\M21'), ('367', 'F2:ZF\\U20'),
             ('367', 'F2:ZF\\Z20'), ('367', 'F2:ZN\\H21'), ('367', 'F2:ZN\\M21'),
             ('367', 'F2:ZN\\Z20'), ('367', 'F2:ZT\\H21'), ('367', 'F2:ZT\\M21'),
