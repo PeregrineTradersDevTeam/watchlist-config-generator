@@ -639,6 +639,7 @@ def process_all_coreref_files(
             pass
         else:
             discovered_symbols.extend(process_coreref_file(file_path, source_symbols_dictionary))
+    discovered_symbols.sort(key=lambda x: x[0])
     return discovered_symbols
 
 
